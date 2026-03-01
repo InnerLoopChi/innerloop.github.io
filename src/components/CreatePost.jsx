@@ -8,7 +8,7 @@ import {
   ClipboardCheck, CalendarDays, CalendarRange, Timer,
 } from 'lucide-react';
 
-const MAX_CHARS = 350;
+const MAX_CHARS = 1000;
 const MAX_TAGS = 3;
 const MAX_TAG_LEN = 20;
 const MAX_REQUIREMENTS = 6;
