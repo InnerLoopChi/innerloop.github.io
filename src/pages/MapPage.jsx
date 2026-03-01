@@ -38,11 +38,15 @@ export default function MapPage() {
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'posts'), snap => {
-      setPosts(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => !p.isInnerOnly));
+      let data = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => !p.isInnerOnly);
+      if (profile?.id) {
+        data = data.filter(p => !p.applicants?.some(a => a.uid === profile.id && a.status === 'rejected'));
+      }
+      setPosts(data);
       setLoading(false);
     }, () => setLoading(false));
     return unsub;
-  }, []);
+  }, [profile?.id]);
 
   // Load Leaflet
   useEffect(() => {

@@ -46,6 +46,11 @@ export default function FeedPage() {
   } else {
     posts = posts.filter(p => !p.isInnerOnly);
   }
+
+  // Hide tasks the user was rejected from
+  if (profile?.id) {
+    posts = posts.filter(p => !p.applicants?.some(a => a.uid === profile.id && a.status === 'rejected'));
+  }
   if (searchTag.trim()) {
     const term = searchTag.toLowerCase();
     posts = posts.filter(p =>

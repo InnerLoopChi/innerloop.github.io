@@ -256,6 +256,28 @@ function TaskCard({ task, isInner, isExpanded, onToggle, onMarkComplete, onRevie
                 </div>
               )}
 
+              {/* Rejected */}
+              {(() => {
+                const rejected = task.applicants?.filter(a => a.status === 'rejected') || [];
+                if (rejected.length === 0) return null;
+                return (
+                  <div>
+                    <p className="text-xs font-semibold text-loop-red/60 uppercase tracking-wide mb-2 mt-4">Declined ({rejected.length})</p>
+                    {rejected.map(app => (
+                      <div key={app.uid} className="flex items-center justify-between p-3 rounded-xl bg-loop-gray/30 border border-loop-gray/50 mb-2 opacity-75">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-loop-red/10 flex items-center justify-center"><X size={14} className="text-loop-red/60" /></div>
+                          <div>
+                            <p className="text-sm font-medium line-through">{app.name}</p>
+                            <p className="text-[10px] text-loop-green/40">Not selected</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
               {pendingApplicants.length === 0 && acceptedApplicants.length === 0 && (
                 <p className="text-sm text-loop-green/40 text-center py-4">No applications yet</p>
               )}
@@ -271,7 +293,7 @@ function TaskCard({ task, isInner, isExpanded, onToggle, onMarkComplete, onRevie
               {myApp.status === 'accepted' ? (
                 <p className="text-sm font-semibold text-green-700 flex items-center justify-center gap-2"><CheckCircle2 size={16} /> You've been accepted!</p>
               ) : myApp.status === 'rejected' ? (
-                <p className="text-sm text-loop-green/50 flex items-center justify-center gap-2"><X size={16} /> Not selected this time</p>
+                <p className="text-sm text-loop-red/60 flex items-center justify-center gap-2"><X size={16} /> Not selected — better luck next time!</p>
               ) : (
                 <p className="text-sm text-loop-green/50 flex items-center justify-center gap-2"><Clock size={16} /> Application pending — waiting for organizer review</p>
               )}
