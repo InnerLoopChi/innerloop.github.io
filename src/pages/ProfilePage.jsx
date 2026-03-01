@@ -311,8 +311,15 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Sign Out */}
-        <div className="pt-4 pb-8">
+        {/* Settings & Sign Out */}
+        <div className="pt-4 pb-8 space-y-3">
+          <button
+            onClick={() => navigate('/settings')}
+            className="w-full py-3 rounded-xl bg-white border border-loop-gray/50 text-loop-green/70 text-sm font-semibold
+              hover:bg-loop-gray/30 transition-colors flex items-center justify-center gap-2"
+          >
+            <Edit3 size={14} /> Account Settings
+          </button>
           <button
             onClick={async () => { await logout(); navigate('/'); }}
             className="w-full py-3 rounded-xl border border-loop-red/20 text-loop-red text-sm font-semibold

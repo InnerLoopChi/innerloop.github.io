@@ -9,6 +9,7 @@ import FeedPage from './pages/FeedPage';
 import ProfilePage from './pages/ProfilePage';
 import MyTasksPage from './pages/MyTasksPage';
 import MessagesPage from './pages/MessagesPage';
+import SettingsPage from './pages/SettingsPage';
 import BottomNav from './components/BottomNav';
 
 // Protected route — redirects to login if not authenticated
@@ -88,6 +89,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <MessagesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected — settings */}
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
           </ProtectedRoute>
         }
       />
