@@ -169,9 +169,9 @@ function TaskCard({ task, isInner, isExpanded, onToggle, onMarkComplete, onRevie
       <button onClick={onToggle} className="w-full text-left p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
               {isComplete && <CheckCircle2 size={14} className="text-green-600 flex-shrink-0" />}
-              <p className="font-semibold text-sm truncate">{task.content?.slice(0, 70)}...</p>
+              <p className="font-semibold text-sm truncate flex-1 min-w-0">{task.content?.slice(0, 70)}...</p>
             </div>
             <div className="flex items-center gap-3 text-xs text-loop-green/40">
               <span className="flex items-center gap-1"><Users size={10} /> {task.taskFilled || 0}/{task.taskCapacity}</span>
@@ -202,7 +202,7 @@ function TaskCard({ task, isInner, isExpanded, onToggle, onMarkComplete, onRevie
 
       {isExpanded && (
         <div className="px-4 pb-4 space-y-4 border-t border-loop-gray/30 pt-3">
-          <p className="text-sm text-loop-green/70 leading-relaxed whitespace-pre-wrap">{task.content}</p>
+          <p className="text-sm text-loop-green/70 leading-relaxed whitespace-pre-wrap break-words">{task.content}</p>
 
           {task.requirements?.length > 0 && (
             <div className="p-3 rounded-xl bg-loop-purple/5 border border-loop-purple/10">
