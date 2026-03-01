@@ -33,7 +33,6 @@ import {
 export default function MessagesPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const isVerifiedInner = profile?.role === 'Inner' && profile?.isVerified;
 
   const [conversations, setConversations] = useState([]);
   const [activeConvo, setActiveConvo] = useState(null);
@@ -119,7 +118,7 @@ export default function MessagesPage() {
       // Add message to subcollection
       await addDoc(collection(db, 'conversations', activeConvo.id, 'messages'), {
         senderID: user.uid,
-        senderName: profile.name,
+        senderName: profile?.name || 'Anonymous',
         text,
         sentAt: Timestamp.now(),
       });
@@ -226,7 +225,7 @@ export default function MessagesPage() {
     const convoData = {
       participants: [user.uid, otherUser.id],
       participantNames: {
-        [user.uid]: profile.name,
+        [user.uid]: profile?.name || 'Me',
         [otherUser.id]: otherUser.name,
       },
       lastMessage: null,

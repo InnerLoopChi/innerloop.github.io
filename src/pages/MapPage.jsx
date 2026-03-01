@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
+import PostCard from '../components/PostCard';
+import NotificationBell from '../components/NotificationBell';
 import {
   Map, MapPin, Users, Clock, Building2, Heart, Loader2, X, Search,
 } from 'lucide-react';
@@ -27,6 +30,7 @@ const NEIGHBORHOODS = [
 
 export default function MapPage() {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const mapRef = useRef(null);
   const leafletMap = useRef(null);
   const markersRef = useRef([]);
@@ -35,6 +39,7 @@ export default function MapPage() {
   const [selectedHood, setSelectedHood] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [mapReady, setMapReady] = useState(false);
+  const [activePost, setActivePost] = useState(null);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'posts'), snap => {
@@ -70,7 +75,6 @@ export default function MapPage() {
       zoom: 11,
       zoomControl: true,
     });
-    // CartoDB Voyager — clean, modern, free
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
       subdomains: 'abcd',
@@ -127,6 +131,7 @@ export default function MapPage() {
         })
         .on('click', () => {
           setSelectedHood(hood);
+          setActivePost(null);
           leafletMap.current.flyTo([hood.lat, hood.lng], 14, { duration: 0.6 });
         });
 
@@ -149,6 +154,7 @@ export default function MapPage() {
 
   function clearSelection() {
     setSelectedHood(null);
+    setActivePost(null);
     leafletMap.current?.flyTo([41.8781, -87.6798], 11, { duration: 0.4 });
   }
 
@@ -162,12 +168,15 @@ export default function MapPage() {
 
       <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-loop-gray/50">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="font-display text-lg font-extrabold flex items-center gap-2">
+          <button onClick={() => window.location.reload()} className="font-display text-lg font-extrabold flex items-center gap-2 hover:opacity-70 transition-opacity cursor-pointer">
             <Map size={18} className="text-loop-red" /> Neighborhood Map
-          </h1>
-          {selectedHood && (
-            <button onClick={clearSelection} className="text-xs text-loop-purple font-semibold flex items-center gap-1"><X size={12} /> Reset</button>
-          )}
+          </button>
+          <div className="flex items-center gap-2">
+            {selectedHood && (
+              <button onClick={clearSelection} className="text-xs text-loop-purple font-semibold flex items-center gap-1"><X size={12} /> Reset</button>
+            )}
+            <NotificationBell />
+          </div>
         </div>
       </div>
 
@@ -189,7 +198,17 @@ export default function MapPage() {
               className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-loop-gray bg-white text-sm placeholder:text-loop-green/30 focus:outline-none focus:ring-2 focus:ring-loop-purple/20" />
           </div>
 
-          {selectedHood && (
+          {/* Active Post overlay */}
+          {activePost && (
+            <div className="space-y-2">
+              <button onClick={() => setActivePost(null)} className="text-xs text-loop-purple font-semibold flex items-center gap-1">
+                <X size={12} /> Close
+              </button>
+              <PostCard post={activePost} />
+            </div>
+          )}
+
+          {selectedHood && !activePost && (
             <div className="space-y-3">
               <h3 className="font-display text-sm font-bold flex items-center gap-2">
                 <MapPin size={14} style={{ color: selectedHood.color }} />
@@ -198,7 +217,7 @@ export default function MapPage() {
               {selectedPosts.length === 0 ? (
                 <p className="bg-white rounded-2xl border border-loop-gray/50 p-6 text-center text-sm text-loop-green/40">No posts for this neighborhood yet</p>
               ) : selectedPosts.map(post => (
-                <div key={post.id} className="bg-white rounded-2xl border border-loop-gray/50 p-4 space-y-2">
+                <button key={post.id} onClick={() => setActivePost(post)} className="w-full text-left bg-white rounded-2xl border border-loop-gray/50 p-4 space-y-2 hover:shadow-md hover:border-loop-purple/30 transition-all cursor-pointer">
                   <div className="flex items-center gap-2">
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center ${post.authorRole === 'Inner' ? 'bg-loop-purple/15' : 'bg-loop-red/15'}`}>
                       {post.authorRole === 'Inner' ? <Building2 size={12} className="text-loop-purple" /> : <Heart size={12} className="text-loop-red" />}
@@ -208,12 +227,13 @@ export default function MapPage() {
                   </div>
                   <p className="text-sm text-loop-green/70 break-words">{post.content}</p>
                   {post.tags?.length > 0 && <div className="flex flex-wrap gap-1">{post.tags.map(t => <span key={t} className="px-1.5 py-0.5 rounded-full text-[10px] bg-loop-blue/15">#{t}</span>)}</div>}
-                </div>
+                  <p className="text-[10px] text-loop-purple font-semibold">Tap to view details →</p>
+                </button>
               ))}
             </div>
           )}
 
-          {!selectedHood && (
+          {!selectedHood && !activePost && (
             <div>
               <h3 className="font-display text-sm font-bold text-loop-green/60 mb-2">Neighborhoods</h3>
               <div className="grid grid-cols-2 gap-2">
