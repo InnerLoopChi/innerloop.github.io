@@ -6,7 +6,7 @@ import {
   updateDoc,
   getDoc,
   increment,
-  serverTimestamp,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -48,7 +48,7 @@ export default function ReviewModal({ onClose, reviewedUserID, reviewedUserName,
         hoursVerified: actualHours,
         comment: comment.trim() || null,
         wasWaitlisted,
-        createdAt: serverTimestamp(),
+        createdAt: Timestamp.now(),
       });
 
       // 2. Update the reviewed user's stats
@@ -148,11 +148,10 @@ export default function ReviewModal({ onClose, reviewedUserID, reviewedUserName,
                 >
                   <Star
                     size={32}
-                    className={`transition-colors ${
-                      i <= (hoverRating || rating)
+                    className={`transition-colors ${i <= (hoverRating || rating)
                         ? 'text-yellow-500 fill-yellow-500'
                         : 'text-loop-gray/60'
-                    }`}
+                      }`}
                   />
                 </button>
               ))}

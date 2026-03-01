@@ -2,17 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   collection,
-  query,
-  where,
-  orderBy,
   onSnapshot,
   addDoc,
   doc,
   getDoc,
   getDocs,
   updateDoc,
-  serverTimestamp,
-  limit,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -73,14 +69,15 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!user?.uid) return;
 
-    const q = query(
-      collection(db, 'conversations'),
-      where('participants', 'array-contains', user.uid),
-      orderBy('lastMessageAt', 'desc')
-    );
-
-    const unsub = onSnapshot(q, (snap) => {
-      setConversations(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    const unsub = onSnapshot(collection(db, 'conversations'), (snap) => {
+      const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const mine = all.filter(c => c.participants?.includes(user.uid));
+      mine.sort((a, b) => {
+        const ta = a.lastMessageAt?.toDate?.() || new Date(0);
+        const tb = b.lastMessageAt?.toDate?.() || new Date(0);
+        return tb - ta;
+      });
+      setConversations(mine);
       setLoading(false);
     }, () => setLoading(false));
 
@@ -91,13 +88,14 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!activeConvo) { setMessages([]); return; }
 
-    const q = query(
-      collection(db, 'conversations', activeConvo.id, 'messages'),
-      orderBy('sentAt', 'asc')
-    );
-
-    const unsub = onSnapshot(q, (snap) => {
-      setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    const unsub = onSnapshot(collection(db, 'conversations', activeConvo.id, 'messages'), (snap) => {
+      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      msgs.sort((a, b) => {
+        const ta = a.sentAt?.toDate?.() || new Date();
+        const tb = b.sentAt?.toDate?.() || new Date();
+        return ta - tb;
+      });
+      setMessages(msgs);
       // Auto-scroll to bottom
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     });
@@ -106,7 +104,7 @@ export default function MessagesPage() {
     if (activeConvo.lastSenderID !== user.uid) {
       updateDoc(doc(db, 'conversations', activeConvo.id), {
         [`unread_${user.uid}`]: 0,
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     return unsub;
@@ -116,16 +114,10 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!showNewConvo) return;
 
-    const q = query(
-      collection(db, 'users'),
-      where('role', '==', 'Inner'),
-      where('isVerified', '==', true)
-    );
-
-    getDocs(q).then(snap => {
-      setInners(snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter(u => u.id !== user.uid)
+    getDocs(collection(db, 'users')).then(snap => {
+      const allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setInners(allUsers
+        .filter(u => u.role === 'Inner' && u.isVerified === true && u.id !== user.uid)
       );
     });
   }, [showNewConvo]);
@@ -145,14 +137,14 @@ export default function MessagesPage() {
         senderID: user.uid,
         senderName: profile.name,
         text,
-        sentAt: serverTimestamp(),
+        sentAt: Timestamp.now(),
       });
 
       // Update conversation metadata
       const otherID = activeConvo.participants.find(p => p !== user.uid);
       await updateDoc(doc(db, 'conversations', activeConvo.id), {
         lastMessage: text,
-        lastMessageAt: serverTimestamp(),
+        lastMessageAt: Timestamp.now(),
         lastSenderID: user.uid,
         [`unread_${otherID}`]: (activeConvo[`unread_${otherID}`] || 0) + 1,
       });
@@ -186,11 +178,11 @@ export default function MessagesPage() {
         [otherUser.id]: otherUser.name,
       },
       lastMessage: null,
-      lastMessageAt: serverTimestamp(),
+      lastMessageAt: Timestamp.now(),
       lastSenderID: null,
       [`unread_${user.uid}`]: 0,
       [`unread_${otherUser.id}`]: 0,
-      createdAt: serverTimestamp(),
+      createdAt: Timestamp.now(),
     };
 
     try {
@@ -269,9 +261,8 @@ export default function MessagesPage() {
                   <button
                     key={convo.id}
                     onClick={() => setActiveConvo(convo)}
-                    className={`w-full text-left p-4 rounded-2xl transition-all duration-200 flex items-center gap-3 ${
-                      unread > 0 ? 'bg-white border-2 border-loop-purple/20 shadow-sm' : 'bg-white border border-loop-gray/50 hover:shadow-sm'
-                    }`}
+                    className={`w-full text-left p-4 rounded-2xl transition-all duration-200 flex items-center gap-3 ${unread > 0 ? 'bg-white border-2 border-loop-purple/20 shadow-sm' : 'bg-white border border-loop-gray/50 hover:shadow-sm'
+                      }`}
                   >
                     <div className="w-11 h-11 rounded-full bg-gradient-to-br from-loop-purple/25 to-loop-purple/10 flex items-center justify-center flex-shrink-0">
                       <Building2 size={18} className="text-loop-purple" />
@@ -314,11 +305,10 @@ export default function MessagesPage() {
               const isMe = msg.senderID === user.uid;
               return (
                 <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                    isMe
+                  <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isMe
                       ? 'bg-loop-purple text-white rounded-br-md'
                       : 'bg-white border border-loop-gray/50 rounded-bl-md'
-                  }`}>
+                    }`}>
                     <p className="text-sm leading-relaxed">{msg.text}</p>
                     <p className={`text-[10px] mt-1 ${isMe ? 'text-white/50' : 'text-loop-green/30'}`}>
                       {formatTime(msg.sentAt)}
@@ -345,9 +335,8 @@ export default function MessagesPage() {
               <button
                 type="submit"
                 disabled={!newMsg.trim() || sending}
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                  newMsg.trim() ? 'bg-loop-purple text-white hover:shadow-md' : 'bg-loop-gray text-loop-green/30'
-                }`}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${newMsg.trim() ? 'bg-loop-purple text-white hover:shadow-md' : 'bg-loop-gray text-loop-green/30'
+                  }`}
               >
                 {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
               </button>

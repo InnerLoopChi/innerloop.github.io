@@ -5,7 +5,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
 const AuthContext = createContext(null);
@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
       starRating: null,
       verifiedHours: 0,
       loopCredits: 0,
-      createdAt: serverTimestamp(),
+      createdAt: Timestamp.now(),
     };
 
     await setDoc(doc(db, 'users', cred.user.uid), userData);

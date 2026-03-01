@@ -10,7 +10,7 @@ import {
   setDoc,
   addDoc,
   collection,
-  serverTimestamp,
+
   Timestamp,
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
@@ -142,7 +142,7 @@ export default function SeedPage() {
     setStatus([]);
 
     // Sign out first
-    try { await signOut(auth); } catch (e) {}
+    try { await signOut(auth); } catch (e) { }
     await new Promise(r => setTimeout(r, 300));
 
     // Step 1: Create accounts sequentially
@@ -158,7 +158,7 @@ export default function SeedPage() {
           name: u.name, role: u.role, isVerified: u.isVerified,
           tags: u.tags, starRating: u.starRating,
           verifiedHours: u.verifiedHours, loopCredits: u.loopCredits,
-          ageVerification: false, location: null, createdAt: serverTimestamp(),
+          ageVerification: false, location: null, createdAt: Timestamp.now(),
         });
         log(`Created ${u.name} (${u.email})`, 'success');
         await signOut(auth);
@@ -172,7 +172,7 @@ export default function SeedPage() {
               name: u.name, role: u.role, isVerified: u.isVerified,
               tags: u.tags, starRating: u.starRating,
               verifiedHours: u.verifiedHours, loopCredits: u.loopCredits,
-              ageVerification: false, location: null, createdAt: serverTimestamp(),
+              ageVerification: false, location: null, createdAt: Timestamp.now(),
             });
             log(`Updated ${u.name} (already existed)`, 'info');
             await signOut(auth);
@@ -260,7 +260,7 @@ export default function SeedPage() {
           reviewedID: userUIDs['looper@demo.com'],
           rating: 5, hoursVerified: 2,
           comment: 'Maria was incredible — arrived early and stayed to help. A true asset!',
-          wasWaitlisted: false, createdAt: serverTimestamp(),
+          wasWaitlisted: false, createdAt: Timestamp.now(),
         });
         log('Pilsen CC → Maria G. (5 stars)', 'success');
       }
@@ -270,7 +270,7 @@ export default function SeedPage() {
           reviewedID: userUIDs['looper2@demo.com'],
           rating: 4, hoursVerified: 3,
           comment: 'Darius handled the delivery route efficiently. Would welcome back!',
-          wasWaitlisted: true, createdAt: serverTimestamp(),
+          wasWaitlisted: true, createdAt: Timestamp.now(),
         });
         log('Logan Sq → Darius W. (4 stars, 2x bonus)', 'success');
       }
@@ -279,7 +279,7 @@ export default function SeedPage() {
     }
 
     // Sign out when done
-    try { await signOut(auth); } catch (e) {}
+    try { await signOut(auth); } catch (e) { }
 
     log('', 'info');
     log('SEED COMPLETE! Go to Login to try demo accounts.', 'success');
