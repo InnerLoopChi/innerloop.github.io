@@ -25,6 +25,7 @@ import {
   User,
   Hash,
   Award,
+  Zap,
 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -142,15 +143,15 @@ export default function ProfilePage() {
         <div className="bg-white rounded-3xl shadow-sm border border-loop-gray/50 overflow-hidden">
           {/* Banner gradient */}
           <div className={`h-24 ${isInner
-              ? 'bg-gradient-to-r from-loop-purple/30 via-loop-purple/20 to-loop-blue/20'
-              : 'bg-gradient-to-r from-loop-red/30 via-loop-red/20 to-loop-blue/20'
+            ? 'bg-gradient-to-r from-loop-purple/30 via-loop-purple/20 to-loop-blue/20'
+            : 'bg-gradient-to-r from-loop-red/30 via-loop-red/20 to-loop-blue/20'
             }`} />
 
           <div className="px-6 pb-6 -mt-10">
             {/* Avatar */}
             <div className={`w-20 h-20 rounded-2xl border-4 border-white shadow-lg flex items-center justify-center ${isInner
-                ? 'bg-gradient-to-br from-loop-purple to-loop-purple/80'
-                : 'bg-gradient-to-br from-loop-red to-loop-red/80'
+              ? 'bg-gradient-to-br from-loop-purple to-loop-purple/80'
+              : 'bg-gradient-to-br from-loop-red to-loop-red/80'
               }`}>
               {isInner
                 ? <Building2 size={32} className="text-white" />
