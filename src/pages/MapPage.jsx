@@ -3,10 +3,8 @@ import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestor
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  Map, MapPin, Users, Clock, Building2, Heart, Loader2, X, Search, Zap,
+  Map, MapPin, Users, Clock, Building2, Heart, Loader2, X, Search,
 } from 'lucide-react';
-
-const GOOGLE_MAPS_KEY = 'AIzaSyCaYs2p0gKHawBPy38qDgJxzMco8VHTk6k';
 
 const NEIGHBORHOODS = [
   { name: 'Pilsen', lat: 41.8525, lng: -87.6614, color: '#8B6897' },
@@ -30,16 +28,14 @@ const NEIGHBORHOODS = [
 export default function MapPage() {
   const { profile } = useAuth();
   const mapRef = useRef(null);
-  const googleMap = useRef(null);
+  const leafletMap = useRef(null);
   const markersRef = useRef([]);
-  const infoWindowRef = useRef(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedHood, setSelectedHood] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [mapReady, setMapReady] = useState(false);
 
-  // Load posts
   useEffect(() => {
     const q = query(collection(db, 'posts'), where('isInnerOnly', '==', false), orderBy('postTime', 'desc'));
     const unsub = onSnapshot(q, snap => {
@@ -49,92 +45,87 @@ export default function MapPage() {
     return unsub;
   }, []);
 
-  // Load Google Maps SDK
+  // Load Leaflet
   useEffect(() => {
-    if (window.google?.maps) { setMapReady(true); return; }
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=marker`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => setMapReady(true);
-    script.onerror = () => console.error('Google Maps failed to load');
-    document.head.appendChild(script);
+    if (window.L) { setMapReady(true); return; }
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
+    const js = document.createElement('script');
+    js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    js.onload = () => setMapReady(true);
+    document.head.appendChild(js);
   }, []);
 
+  // Init map
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || leafletMap.current) return;
+    const L = window.L;
+    leafletMap.current = L.map(mapRef.current, {
+      center: [41.8781, -87.6798],
+      zoom: 11,
+      zoomControl: true,
+    });
+    // CartoDB Voyager — clean, modern, free
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 18,
+    }).addTo(leafletMap.current);
+
+    return () => { if (leafletMap.current) { leafletMap.current.remove(); leafletMap.current = null; } };
+  }, [mapReady]);
+
   const getPostsForHood = useCallback((hoodName) => {
-    const hoodTag = hoodName.toLowerCase().replace(/\s+/g, '-');
+    const tag = hoodName.toLowerCase().replace(/\s+/g, '-');
     const words = hoodName.toLowerCase().split(' ');
     return posts.filter(p => {
       const tags = p.tags?.map(t => t.toLowerCase()) || [];
       const content = p.content?.toLowerCase() || '';
-      return tags.some(t => t.includes(hoodTag) || words.some(w => w.length > 3 && t.includes(w)))
+      return tags.some(t => t.includes(tag) || words.some(w => w.length > 3 && t.includes(w)))
         || words.some(w => w.length > 4 && content.includes(w));
     });
   }, [posts]);
 
-  // Init map
+  // Markers
   useEffect(() => {
-    if (!mapReady || !mapRef.current || googleMap.current) return;
-    googleMap.current = new google.maps.Map(mapRef.current, {
-      center: { lat: 41.8781, lng: -87.6798 },
-      zoom: 11,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-      styles: [
-        { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-        { featureType: 'transit', stylers: [{ visibility: 'simplified' }] },
-        { featureType: 'water', stylers: [{ color: '#c9e8f7' }] },
-      ],
-    });
-    infoWindowRef.current = new google.maps.InfoWindow();
-  }, [mapReady]);
-
-  // Update markers
-  useEffect(() => {
-    if (!googleMap.current || !window.google) return;
-
-    // Clear old
-    markersRef.current.forEach(m => m.setMap(null));
+    if (!mapReady || !leafletMap.current || !window.L) return;
+    const L = window.L;
+    markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
     NEIGHBORHOODS.forEach(hood => {
-      const hoodPosts = getPostsForHood(hood.name);
-      const count = hoodPosts.length;
-      const taskCount = hoodPosts.filter(p => p.taskCapacity > 0).length;
+      const count = getPostsForHood(hood.name).length;
+      const tasks = getPostsForHood(hood.name).filter(p => p.taskCapacity > 0).length;
+      const size = Math.max(30, Math.min(50, 26 + count * 4));
 
-      const size = Math.max(32, Math.min(52, 28 + count * 5));
-      const marker = new google.maps.Marker({
-        position: { lat: hood.lat, lng: hood.lng },
-        map: googleMap.current,
-        icon: {
-          url: `data:image/svg+xml,${encodeURIComponent(`
-            <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size + 10}" viewBox="0 0 ${size} ${size + 10}">
-              <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 2}" fill="${hood.color}" stroke="white" stroke-width="3"/>
-              <text x="${size / 2}" y="${size / 2 + 5}" text-anchor="middle" fill="white" font-size="${count > 9 ? 11 : 14}" font-weight="bold" font-family="sans-serif">${count}</text>
-              <polygon points="${size / 2 - 6},${size - 2} ${size / 2 + 6},${size - 2} ${size / 2},${size + 8}" fill="${hood.color}"/>
-            </svg>
-          `)}`,
-          scaledSize: new google.maps.Size(size, size + 10),
-          anchor: new google.maps.Point(size / 2, size + 10),
-        },
-        title: `${hood.name} (${count} posts, ${taskCount} tasks)`,
-        cursor: 'pointer',
-        optimized: false,
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="
+          width:${size}px;height:${size}px;border-radius:50%;
+          background:${count > 0 ? hood.color : '#ccc'};
+          display:flex;align-items:center;justify-content:center;
+          color:white;font-weight:700;font-size:${count > 9 ? 10 : 13}px;
+          font-family:system-ui;
+          box-shadow:0 3px 12px ${hood.color}60;
+          border:3px solid white;cursor:pointer;
+          transition:transform .2s;
+        " onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">${count}</div>`,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
       });
 
-      marker.addListener('click', () => {
-        setSelectedHood(hood);
-        googleMap.current.panTo({ lat: hood.lat, lng: hood.lng });
-        googleMap.current.setZoom(14);
-        infoWindowRef.current.setContent(
-          `<div style="font-family:system-ui;padding:4px 0;">
-            <strong style="font-size:14px;">${hood.name}</strong><br/>
-            <span style="color:#666;font-size:12px;">${count} posts · ${taskCount} active tasks</span>
-          </div>`
-        );
-        infoWindowRef.current.open(googleMap.current, marker);
-      });
+      const marker = L.marker([hood.lat, hood.lng], { icon })
+        .addTo(leafletMap.current)
+        .bindTooltip(`<strong>${hood.name}</strong><br/>${count} posts · ${tasks} tasks`, {
+          direction: 'top', offset: [0, -size / 2 - 4],
+          className: 'leaflet-tooltip-custom',
+        })
+        .on('click', () => {
+          setSelectedHood(hood);
+          leafletMap.current.flyTo([hood.lat, hood.lng], 14, { duration: 0.6 });
+        });
 
       markersRef.current.push(marker);
     });
@@ -145,13 +136,17 @@ export default function MapPage() {
 
   function clearSelection() {
     setSelectedHood(null);
-    infoWindowRef.current?.close();
-    googleMap.current?.panTo({ lat: 41.8781, lng: -87.6798 });
-    googleMap.current?.setZoom(11);
+    leafletMap.current?.flyTo([41.8781, -87.6798], 11, { duration: 0.4 });
   }
 
   return (
     <div className="min-h-screen bg-loop-gray">
+      {/* Tooltip CSS */}
+      <style>{`
+        .leaflet-tooltip-custom { font-family: system-ui; font-size: 12px; padding: 6px 10px; border-radius: 8px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        .leaflet-control-attribution { font-size: 9px !important; }
+      `}</style>
+
       <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-loop-gray/50">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="font-display text-lg font-extrabold flex items-center gap-2">
@@ -164,18 +159,16 @@ export default function MapPage() {
       </div>
 
       <div className="max-w-2xl mx-auto">
-        {/* Google Map */}
         <div className="relative" style={{ height: '55vh', minHeight: 350 }}>
-          <div ref={mapRef} className="w-full h-full" />
+          <div ref={mapRef} className="w-full h-full" style={{ zIndex: 1 }} />
           {!mapReady && (
-            <div className="absolute inset-0 flex items-center justify-center bg-loop-gray">
+            <div className="absolute inset-0 flex items-center justify-center bg-loop-gray z-10">
               <Loader2 size={28} className="animate-spin text-loop-purple" />
             </div>
           )}
         </div>
 
         <div className="px-4 py-4 space-y-4">
-          {/* Search */}
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-loop-green/30" />
             <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
@@ -183,7 +176,6 @@ export default function MapPage() {
               className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-loop-gray bg-white text-sm placeholder:text-loop-green/30 focus:outline-none focus:ring-2 focus:ring-loop-purple/20" />
           </div>
 
-          {/* Selected */}
           {selectedHood && (
             <div className="space-y-3">
               <h3 className="font-display text-sm font-bold flex items-center gap-2">
@@ -191,7 +183,7 @@ export default function MapPage() {
                 {selectedHood.name} ({selectedPosts.length})
               </h3>
               {selectedPosts.length === 0 ? (
-                <p className="bg-white rounded-2xl border border-loop-gray/50 p-6 text-center text-sm text-loop-green/40">No posts for this neighborhood</p>
+                <p className="bg-white rounded-2xl border border-loop-gray/50 p-6 text-center text-sm text-loop-green/40">No posts for this neighborhood yet</p>
               ) : selectedPosts.map(post => (
                 <div key={post.id} className="bg-white rounded-2xl border border-loop-gray/50 p-4 space-y-2">
                   <div className="flex items-center gap-2">
@@ -199,20 +191,15 @@ export default function MapPage() {
                       {post.authorRole === 'Inner' ? <Building2 size={12} className="text-loop-purple" /> : <Heart size={12} className="text-loop-red" />}
                     </div>
                     <span className="text-xs font-semibold flex-1">{post.authorName}</span>
-                    {post.taskCapacity > 0 && (
-                      <span className="text-[10px] text-loop-green/40 flex items-center gap-1"><Users size={9} /> {post.taskFilled || 0}/{post.taskCapacity}</span>
-                    )}
+                    {post.taskCapacity > 0 && <span className="text-[10px] text-loop-green/40"><Users size={9} className="inline" /> {post.taskFilled || 0}/{post.taskCapacity}</span>}
                   </div>
                   <p className="text-sm text-loop-green/70">{post.content}</p>
-                  {post.tags?.length > 0 && (
-                    <div className="flex flex-wrap gap-1">{post.tags.map(t => <span key={t} className="px-1.5 py-0.5 rounded-full text-[10px] bg-loop-blue/15">#{t}</span>)}</div>
-                  )}
+                  {post.tags?.length > 0 && <div className="flex flex-wrap gap-1">{post.tags.map(t => <span key={t} className="px-1.5 py-0.5 rounded-full text-[10px] bg-loop-blue/15">#{t}</span>)}</div>}
                 </div>
               ))}
             </div>
           )}
 
-          {/* Grid */}
           {!selectedHood && (
             <div>
               <h3 className="font-display text-sm font-bold text-loop-green/60 mb-2">Neighborhoods</h3>
@@ -222,10 +209,9 @@ export default function MapPage() {
                   return (
                     <button key={hood.name} onClick={() => {
                       setSelectedHood(hood);
-                      googleMap.current?.panTo({ lat: hood.lat, lng: hood.lng });
-                      googleMap.current?.setZoom(14);
+                      leafletMap.current?.flyTo([hood.lat, hood.lng], 14, { duration: 0.6 });
                     }} className="bg-white rounded-xl border border-loop-gray/50 p-3 text-left hover:shadow-sm transition-all flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: hood.color + '20' }}>
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: hood.color + '20' }}>
                         <MapPin size={13} style={{ color: hood.color }} />
                       </div>
                       <div>
