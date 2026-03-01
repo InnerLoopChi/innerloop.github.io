@@ -153,6 +153,13 @@ function TaskCard({ task, isInner, isExpanded, onToggle, onMarkComplete, onRevie
             <div className="flex items-center gap-3 text-xs text-loop-green/40">
               <span className="flex items-center gap-1"><Users size={10} /> {task.taskFilled || 0}/{task.taskCapacity}</span>
               <span className="flex items-center gap-1"><Clock size={10} /> +{task.hoursReward}h</span>
+              {task.eventDate?.toDate && (
+                <span className="flex items-center gap-1 text-loop-purple font-semibold">
+                  {task.eventDate.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  {' '}
+                  {task.eventDate.toDate().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                </span>
+              )}
               <span>{timeAgo(task.postTime)}</span>
               {isInner && pendingApplicants.length > 0 && (
                 <span className="text-loop-purple font-semibold">{pendingApplicants.length} pending</span>

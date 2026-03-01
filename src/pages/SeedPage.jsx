@@ -69,6 +69,7 @@ const DEMO_POSTS = [
     taskCapacity: 3, taskFilled: 0, hoursReward: 2,
     requirements: ['Must be 16+', 'Able to lift 20 lbs'],
     isInnerOnly: false, minutesAgo: 15,
+    daysFromNow: 2, eventHour: 9,
   },
   {
     authorEmail: 'looper@demo.com',
@@ -77,6 +78,7 @@ const DEMO_POSTS = [
     taskCapacity: null, taskFilled: null, hoursReward: null,
     requirements: [],
     isInnerOnly: false, minutesAgo: 45,
+    daysFromNow: null, eventHour: null,
   },
   {
     authorEmail: 'inner2@demo.com',
@@ -85,6 +87,7 @@ const DEMO_POSTS = [
     taskCapacity: 5, taskFilled: 0, hoursReward: 1.5,
     requirements: ['Must have car', 'Valid drivers license', 'Speaks English or Spanish'],
     isInnerOnly: false, minutesAgo: 120,
+    daysFromNow: 4, eventHour: 8,
   },
   {
     authorEmail: 'looper2@demo.com',
@@ -93,6 +96,7 @@ const DEMO_POSTS = [
     taskCapacity: null, taskFilled: null, hoursReward: null,
     requirements: [],
     isInnerOnly: false, minutesAgo: 200,
+    daysFromNow: null, eventHour: null,
   },
   {
     authorEmail: 'inner@demo.com',
@@ -101,6 +105,7 @@ const DEMO_POSTS = [
     taskCapacity: 2, taskFilled: 0, hoursReward: 3,
     requirements: ['Experience with children', 'Must be 18+'],
     isInnerOnly: false, minutesAgo: 300,
+    daysFromNow: 5, eventHour: 10,
   },
   {
     authorEmail: 'inner2@demo.com',
@@ -109,6 +114,7 @@ const DEMO_POSTS = [
     taskCapacity: null, taskFilled: null, hoursReward: null,
     requirements: [],
     isInnerOnly: true, minutesAgo: 400,
+    daysFromNow: null, eventHour: null,
   },
   {
     authorEmail: 'looper@demo.com',
@@ -117,6 +123,7 @@ const DEMO_POSTS = [
     taskCapacity: null, taskFilled: null, hoursReward: null,
     requirements: [],
     isInnerOnly: false, minutesAgo: 500,
+    daysFromNow: null, eventHour: null,
   },
 ];
 
@@ -211,6 +218,9 @@ export default function SeedPage() {
           requirements: p.requirements || [],
           applicants: [],
           status: 'active',
+          eventDate: p.daysFromNow != null
+            ? Timestamp.fromDate(new Date(Date.now() + p.daysFromNow * 86400000 + (p.eventHour || 9) * 3600000))
+            : null,
           location: null,
         });
         log(`"${p.content.slice(0, 40)}..."`, 'success');

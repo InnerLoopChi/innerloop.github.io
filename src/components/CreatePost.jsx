@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import {
-  X, Send, Hash, Users, Clock, Loader2, AlertCircle, Lock, Plus, ClipboardCheck,
+  X, Send, Hash, Users, Clock, Loader2, AlertCircle, Lock, Plus, ClipboardCheck, CalendarDays,
 } from 'lucide-react';
 
 const MAX_CHARS = 350;
@@ -22,6 +22,8 @@ export default function CreatePost({ onClose, isInnerOnly = false }) {
   const [isTask, setIsTask] = useState(false);
   const [taskCapacity, setTaskCapacity] = useState(3);
   const [hoursReward, setHoursReward] = useState(1);
+  const [eventDate, setEventDate] = useState('');
+  const [eventTime, setEventTime] = useState('');
   const [innerPost, setInnerPost] = useState(isInnerOnly);
   const [requirements, setRequirements] = useState([]);
   const [reqInput, setReqInput] = useState('');
@@ -30,16 +32,15 @@ export default function CreatePost({ onClose, isInnerOnly = false }) {
 
   const isInner = profile?.role === 'Inner';
   const isVerifiedInner = isInner && profile?.isVerified;
-  const charCount = content.length;
-  const charsLeft = MAX_CHARS - charCount;
+  const charsLeft = MAX_CHARS - content.length;
+
+  // Min date = today
+  const today = new Date().toISOString().split('T')[0];
 
   function addTag() {
     let tag = tagInput.trim().toLowerCase().replace(/^#/, '').replace(/[^a-z0-9-]/g, '');
     if (tag.length > MAX_TAG_LEN) tag = tag.slice(0, MAX_TAG_LEN);
-    if (tag && !tags.includes(tag) && tags.length < MAX_TAGS) {
-      setTags([...tags, tag]);
-      setTagInput('');
-    }
+    if (tag && !tags.includes(tag) && tags.length < MAX_TAGS) { setTags([...tags, tag]); setTagInput(''); }
   }
 
   function handleTagKeyDown(e) {
@@ -49,10 +50,7 @@ export default function CreatePost({ onClose, isInnerOnly = false }) {
 
   function addRequirement() {
     const req = reqInput.trim();
-    if (req && requirements.length < MAX_REQUIREMENTS && !requirements.includes(req)) {
-      setRequirements([...requirements, req]);
-      setReqInput('');
-    }
+    if (req && requirements.length < MAX_REQUIREMENTS && !requirements.includes(req)) { setRequirements([...requirements, req]); setReqInput(''); }
   }
 
   async function handleSubmit(e) {
@@ -60,7 +58,14 @@ export default function CreatePost({ onClose, isInnerOnly = false }) {
     setError('');
     const trimmed = content.trim();
     if (!trimmed) return setError('Write something first.');
-    if (trimmed.length > MAX_CHARS) return setError(`Post too long (max ${MAX_CHARS} characters).`);
+    if (isTask && !eventDate) return setError('Pick a date for the task.');
+
+    // Build eventDateTime as Firestore Timestamp
+    let eventTimestamp = null;
+    if (eventDate) {
+      const dateStr = eventTime ? `${eventDate}T${eventTime}` : `${eventDate}T09:00`;
+      eventTimestamp = Timestamp.fromDate(new Date(dateStr));
+    }
 
     try {
       setLoading(true);
@@ -77,6 +82,7 @@ export default function CreatePost({ onClose, isInnerOnly = false }) {
         waitlist: isTask ? [] : null,
         joinedUsers: isTask ? [] : null,
         hoursReward: isTask ? Number(hoursReward) : null,
+        eventDate: eventTimestamp,
         requirements: isTask && requirements.length > 0 ? requirements : [],
         applicants: isTask ? [] : null,
         status: 'active',
@@ -87,9 +93,7 @@ export default function CreatePost({ onClose, isInnerOnly = false }) {
     } catch (err) {
       console.error(err);
       setError('Failed to post. Try again.');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   return (
@@ -114,16 +118,12 @@ export default function CreatePost({ onClose, isInnerOnly = false }) {
             <textarea value={content} onChange={e => { if (e.target.value.length <= MAX_CHARS) setContent(e.target.value); }}
               placeholder="What's happening in your neighborhood?" rows={4}
               className="w-full px-4 py-3 rounded-xl border border-loop-gray bg-loop-gray/20 text-sm placeholder:text-loop-green/30 focus:outline-none focus:ring-2 focus:ring-loop-purple/20 resize-none" />
-            <p className={`text-xs text-right mt-1 ${charsLeft < 30 ? 'text-loop-red font-semibold' : 'text-loop-green/30'}`}>
-              {charsLeft} characters left
-            </p>
+            <p className={`text-xs text-right mt-1 ${charsLeft < 30 ? 'text-loop-red font-semibold' : 'text-loop-green/30'}`}>{charsLeft} left</p>
           </div>
 
           {/* Tags */}
           <div>
-            <label className="block text-xs font-medium mb-1.5 flex items-center gap-1">
-              <Hash size={12} className="text-loop-green/40" /> Tags ({tags.length}/{MAX_TAGS})
-            </label>
+            <label className="block text-xs font-medium mb-1.5 flex items-center gap-1"><Hash size={12} className="text-loop-green/40" /> Tags ({tags.length}/{MAX_TAGS})</label>
             <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl border border-loop-gray bg-loop-gray/20 min-h-[40px]">
               {tags.map(tag => (
                 <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-loop-blue/20 text-xs font-medium">
@@ -150,6 +150,17 @@ export default function CreatePost({ onClose, isInnerOnly = false }) {
 
             {isTask && (
               <div className="space-y-3 pt-2 border-t border-loop-gray/50">
+                {/* Date & Time */}
+                <div>
+                  <label className="block text-[10px] font-medium mb-1 text-loop-green/60 flex items-center gap-1"><CalendarDays size={11} /> When is this task?</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} min={today}
+                      className="w-full px-3 py-2 rounded-lg border border-loop-gray bg-white text-sm focus:outline-none focus:ring-2 focus:ring-loop-purple/20" />
+                    <input type="time" value={eventTime} onChange={e => setEventTime(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-loop-gray bg-white text-sm focus:outline-none focus:ring-2 focus:ring-loop-purple/20" />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-medium mb-1 text-loop-green/60">Spots</label>
