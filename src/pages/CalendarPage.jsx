@@ -18,9 +18,9 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(null);
 
   useEffect(() => {
-    const q = query(collection(db, 'posts'), where('taskCapacity', '>', 0), orderBy('taskCapacity'), orderBy('postTime', 'desc'));
+    const q = query(collection(db, 'posts'), orderBy('postTime', 'desc'));
     const unsub = onSnapshot(q, snap => {
-      setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(t => t.taskCapacity > 0));
       setLoading(false);
     }, () => setLoading(false));
     return unsub;

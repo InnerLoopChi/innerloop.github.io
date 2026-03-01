@@ -27,14 +27,17 @@ export default function MyTasksPage() {
     if (!user?.uid) return;
     let q;
     if (isInner) {
-      q = query(collection(db, 'posts'), where('authorID', '==', user.uid), where('taskCapacity', '>', 0), orderBy('taskCapacity'), orderBy('postTime', 'desc'));
+      // Inner: get own posts, filter tasks client-side
+      q = query(collection(db, 'posts'), where('authorID', '==', user.uid), orderBy('postTime', 'desc'));
     } else {
-      // Loopers: show tasks where they have an application
-      q = query(collection(db, 'posts'), where('taskCapacity', '>', 0), orderBy('taskCapacity'), orderBy('postTime', 'desc'));
+      // Looper: get all posts, filter to applied ones client-side
+      q = query(collection(db, 'posts'), orderBy('postTime', 'desc'));
     }
 
     const unsub = onSnapshot(q, (snap) => {
       let data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Filter to tasks only
+      data = data.filter(t => t.taskCapacity > 0);
       // For Loopers, filter to tasks they applied to
       if (!isInner) {
         data = data.filter(t => t.applicants?.some(a => a.uid === user.uid) || t.joinedUsers?.includes(user.uid));
@@ -153,12 +156,15 @@ function TaskCard({ task, isInner, isExpanded, onToggle, onMarkComplete, onRevie
             <div className="flex items-center gap-3 text-xs text-loop-green/40">
               <span className="flex items-center gap-1"><Users size={10} /> {task.taskFilled || 0}/{task.taskCapacity}</span>
               <span className="flex items-center gap-1"><Clock size={10} /> +{task.hoursReward}h</span>
-              {task.eventDate?.toDate && (
+              {task.schedule?.startDate?.toDate && (
                 <span className="flex items-center gap-1 text-loop-purple font-semibold">
-                  {task.eventDate.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  {' '}
-                  {task.eventDate.toDate().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                  {task.schedule.startDate.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  {task.schedule.startTime && ` ${fmtClock(task.schedule.startTime)}`}
+                  {task.schedule.endDate?.toDate && ` → ${task.schedule.endDate.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                 </span>
+              )}
+              {task.schedule?.ongoing && (
+                <span className="text-loop-purple font-semibold">Ongoing</span>
               )}
               <span>{timeAgo(task.postTime)}</span>
               {isInner && pendingApplicants.length > 0 && (
@@ -324,4 +330,11 @@ function ApplicantCard({ app, requirements, onAccept, onReject }) {
       </div>
     </div>
   );
+}
+
+function fmtClock(timeStr) {
+  if (!timeStr) return '';
+  const [h, m] = timeStr.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
 }
