@@ -66,7 +66,8 @@ const DEMO_POSTS = [
     authorEmail: 'inner@demo.com',
     content: 'Looking for 3 volunteers to help sort donated winter coats this Saturday. Meet at the center at 9am. We provide gloves and snacks!',
     tags: ['volunteer', 'pilsen', 'donation'],
-    taskCapacity: 3, taskFilled: 1, hoursReward: 2,
+    taskCapacity: 3, taskFilled: 0, hoursReward: 2,
+    requirements: ['Must be 16+', 'Able to lift 20 lbs'],
     isInnerOnly: false, minutesAgo: 15,
   },
   {
@@ -74,13 +75,15 @@ const DEMO_POSTS = [
     content: 'Does anyone know a good after-school tutoring program near Humboldt Park? My son needs help with math.',
     tags: ['tutoring', 'humboldt-park'],
     taskCapacity: null, taskFilled: null, hoursReward: null,
+    requirements: [],
     isInnerOnly: false, minutesAgo: 45,
   },
   {
     authorEmail: 'inner2@demo.com',
     content: 'URGENT: We need 5 drivers to deliver meal kits to seniors in the 60647 zip code this Thursday morning. Each route is about 1.5 hours.',
     tags: ['delivery', 'logan-square', 'seniors'],
-    taskCapacity: 5, taskFilled: 5, hoursReward: 1.5,
+    taskCapacity: 5, taskFilled: 0, hoursReward: 1.5,
+    requirements: ['Must have car', 'Valid drivers license', 'Speaks English or Spanish'],
     isInnerOnly: false, minutesAgo: 120,
   },
   {
@@ -88,6 +91,7 @@ const DEMO_POSTS = [
     content: 'Just finished 10 hours volunteering at the Garfield Park Conservatory cleanup! If anyone wants to join next month, keep an eye on the feed.',
     tags: ['garfield-park', 'cleanup'],
     taskCapacity: null, taskFilled: null, hoursReward: null,
+    requirements: [],
     isInnerOnly: false, minutesAgo: 200,
   },
   {
@@ -95,6 +99,7 @@ const DEMO_POSTS = [
     content: 'Free youth basketball clinic this weekend at Dvorak Park! Ages 8-14. We need 2 volunteers to help coach.',
     tags: ['youth', 'sports', 'pilsen'],
     taskCapacity: 2, taskFilled: 0, hoursReward: 3,
+    requirements: ['Experience with children', 'Must be 18+'],
     isInnerOnly: false, minutesAgo: 300,
   },
   {
@@ -102,6 +107,7 @@ const DEMO_POSTS = [
     content: 'We have extra canned goods and dry pasta available for any community org that needs them. DM us to arrange pickup.',
     tags: ['resources', 'food'],
     taskCapacity: null, taskFilled: null, hoursReward: null,
+    requirements: [],
     isInnerOnly: true, minutesAgo: 400,
   },
   {
@@ -109,6 +115,7 @@ const DEMO_POSTS = [
     content: 'Shoutout to Pilsen Community Center for the amazing coat drive! Got my kids warm jackets and met so many great neighbors.',
     tags: ['pilsen', 'gratitude'],
     taskCapacity: null, taskFilled: null, hoursReward: null,
+    requirements: [],
     isInnerOnly: false, minutesAgo: 500,
   },
 ];
@@ -201,6 +208,9 @@ export default function SeedPage() {
           waitlist: [],
           joinedUsers: [],
           hoursReward: p.hoursReward,
+          requirements: p.requirements || [],
+          applicants: [],
+          status: 'active',
           location: null,
         });
         log(`"${p.content.slice(0, 40)}..."`, 'success');
