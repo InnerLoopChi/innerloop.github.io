@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -18,8 +18,7 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(null);
 
   useEffect(() => {
-    const q = query(collection(db, 'posts'), orderBy('postTime', 'desc'));
-    const unsub = onSnapshot(q, snap => {
+    const unsub = onSnapshot(collection(db, 'posts'), snap => {
       setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(t => t.taskCapacity > 0));
       setLoading(false);
     }, () => setLoading(false));

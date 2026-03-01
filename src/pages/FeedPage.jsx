@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import CreatePost from '../components/CreatePost';
@@ -17,9 +17,17 @@ export default function FeedPage() {
 
   // ONE simple query — no where, no compound index needed
   useEffect(() => {
-    const q = query(collection(db, 'posts'), orderBy('postTime', 'desc'));
-    const unsub = onSnapshot(q, snap => {
-      setAllPosts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    // No orderBy, no where — just get ALL posts. Sort and filter client-side.
+    // This avoids: composite index requirements, null postTime exclusion, security rule conflicts.
+    const unsub = onSnapshot(collection(db, 'posts'), snap => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Sort by postTime descending, null/pending timestamps go to top
+      data.sort((a, b) => {
+        const ta = a.postTime?.toDate?.() || new Date();
+        const tb = b.postTime?.toDate?.() || new Date();
+        return tb - ta;
+      });
+      setAllPosts(data);
       setLoading(false);
     }, err => {
       console.error('Feed error:', err);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc,
+  collection, onSnapshot, doc, updateDoc, getDoc,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,10 +25,8 @@ export default function MyTasksPage() {
 
   useEffect(() => {
     if (!user?.uid) return;
-    // Single simple query for everyone — filter client-side
-    const q = query(collection(db, 'posts'), orderBy('postTime', 'desc'));
-
-    const unsub = onSnapshot(q, (snap) => {
+    // Raw collection listener — no orderBy, no where, no index needed
+    const unsub = onSnapshot(collection(db, 'posts'), (snap) => {
       let data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       // Filter to tasks only
       data = data.filter(t => t.taskCapacity > 0);

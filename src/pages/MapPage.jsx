@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -37,8 +37,7 @@ export default function MapPage() {
   const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
-    const q = query(collection(db, 'posts'), orderBy('postTime', 'desc'));
-    const unsub = onSnapshot(q, snap => {
+    const unsub = onSnapshot(collection(db, 'posts'), snap => {
       setPosts(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => !p.isInnerOnly));
       setLoading(false);
     }, () => setLoading(false));
