@@ -1,5 +1,28 @@
 # InnerLoop — CHANGELOG
 
+## [0.8.0] — 2026-03-01 — Chunk 8: Settings + Delete Account
+
+### Files Created / Modified
+| File | Action | Purpose |
+|---|---|---|
+| `src/pages/SettingsPage.jsx` | **Created** | Edit name, view email/role/verified status, sign out, delete account with "DELETE" confirmation (batch deletes posts + user doc + Firebase Auth) |
+| `src/pages/ProfilePage.jsx` | **Modified** | Added "Account Settings" button |
+| `src/App.jsx` | **Modified** | Added `/settings` route |
+
+---
+
+## [0.7.0] — 2026-03-01 — Chunk 7: Bottom Nav + Toast Notifications
+
+### Files Created / Modified
+| File | Action | Purpose |
+|---|---|---|
+| `src/components/BottomNav.jsx` | **Created** | Mobile-first bottom tab bar (Feed/Tasks/DMs/Profile) with active indicators, DMs tab only for verified Inners |
+| `src/contexts/ToastContext.jsx` | **Created** | Global toast notification system — success/error/info/reward variants, auto-dismiss, stacked |
+| `src/components/PostCard.jsx` | **Modified** | Added toast on join task, join waitlist |
+| `src/App.jsx` | **Modified** | BottomNav in ProtectedRoute, ToastProvider wrapping app |
+
+---
+
 ## [0.6.0] — 2026-03-01 — Chunk 6: Task Management + Inner Loop DMs
 
 ### Overview
