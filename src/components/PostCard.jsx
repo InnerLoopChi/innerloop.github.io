@@ -3,6 +3,7 @@ import { useToast } from '../contexts/ToastContext';
 import {
   doc,
   updateDoc,
+  deleteDoc,
   arrayUnion,
   arrayRemove,
   increment,
@@ -19,10 +20,14 @@ import {
   Zap,
   Check,
   Loader2,
+  Trash2,
+  MoreHorizontal,
 } from 'lucide-react';
 
 export default function PostCard({ post, currentUser }) {
   const [joining, setJoining] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const toast = useToast();
 
   const isTask = post.taskCapacity != null && post.taskCapacity > 0;
@@ -80,6 +85,20 @@ export default function PostCard({ post, currentUser }) {
     }
   }
 
+  // Delete own post
+  async function handleDelete() {
+    if (!isAuthor) return;
+    setDeleting(true);
+    try {
+      await deleteDoc(doc(db, 'posts', post.id));
+      toast.success('Post deleted.');
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast.error('Failed to delete post.');
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="bg-white rounded-2xl border border-loop-gray/50 p-6 hover:shadow-md transition-shadow duration-300">
       {/* Author header */}
@@ -109,6 +128,32 @@ export default function PostCard({ post, currentUser }) {
           <span className="px-2.5 py-1 rounded-full bg-loop-purple/10 text-loop-purple text-xs font-semibold flex items-center gap-1">
             <Shield size={10} /> Inner Only
           </span>
+        )}
+
+        {/* Author menu */}
+        {isAuthor && (
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="w-8 h-8 rounded-full hover:bg-loop-gray flex items-center justify-center transition-colors"
+            >
+              <MoreHorizontal size={16} className="text-loop-green/40" />
+            </button>
+            {showMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                <div className="absolute right-0 top-10 z-20 bg-white rounded-xl shadow-lg border border-loop-gray/50 py-1 min-w-[140px] animate-fadeIn">
+                  <button
+                    onClick={() => { setShowMenu(false); handleDelete(); }}
+                    disabled={deleting}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-loop-red hover:bg-loop-red/5 transition-colors"
+                  >
+                    <Trash2 size={14} /> {deleting ? 'Deleting...' : 'Delete Post'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         )}
       </div>
 

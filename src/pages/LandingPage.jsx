@@ -125,9 +125,9 @@ function Navbar() {
               {label}
             </a>
           ))}
-          <a href="#join" onClick={() => setOpen(false)} className="btn-primary text-xs w-full text-center">
+          <Link to="/signup" onClick={() => setOpen(false)} className="btn-primary text-xs w-full text-center">
             Join the Loop
-          </a>
+          </Link>
         </div>
       )}
     </nav>
@@ -172,9 +172,9 @@ function Hero() {
 
           <Reveal delay={300}>
             <div className="flex flex-wrap gap-4">
-              <a href="#join" className="group inline-flex items-center gap-2 px-8 py-4 rounded-full bg-loop-green text-white font-semibold text-sm shadow-lg shadow-loop-green/20 hover:shadow-xl hover:shadow-loop-green/30 transition-all duration-300 hover:scale-105">
+              <Link to="/signup" className="group inline-flex items-center gap-2 px-8 py-4 rounded-full bg-loop-green text-white font-semibold text-sm shadow-lg shadow-loop-green/20 hover:shadow-xl hover:shadow-loop-green/30 transition-all duration-300 hover:scale-105">
                 Get Started <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </a>
+              </Link>
               <a href="#how-it-works" className="inline-flex items-center gap-2 px-8 py-4 rounded-full border-2 border-loop-green/20 text-loop-green font-semibold text-sm hover:border-loop-green/40 hover:bg-loop-green/5 transition-all duration-300">
                 See How It Works
               </a>
