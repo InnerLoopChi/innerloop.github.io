@@ -14,7 +14,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
-import { Loader2, Check, AlertCircle, Sparkles, Database } from 'lucide-react';
+import { Loader2, Check, Sparkles, Database } from 'lucide-react';
 
 const DEMO_PASSWORD = 'demo1234';
 
@@ -63,74 +63,53 @@ const DEMO_USERS = [
 
 const DEMO_POSTS = [
   {
-    authorIndex: 2, // inner@demo.com
-    content: 'Looking for 3 volunteers to help sort donated winter coats this Saturday 🧤 Meet at the center at 9am. We provide gloves and snacks!',
+    authorEmail: 'inner@demo.com',
+    content: 'Looking for 3 volunteers to help sort donated winter coats this Saturday. Meet at the center at 9am. We provide gloves and snacks!',
     tags: ['volunteer', 'pilsen', 'donation'],
-    taskCapacity: 3,
-    taskFilled: 2,
-    hoursReward: 2,
-    isInnerOnly: false,
-    minutesAgo: 15,
+    taskCapacity: 3, taskFilled: 1, hoursReward: 2,
+    isInnerOnly: false, minutesAgo: 15,
   },
   {
-    authorIndex: 0, // looper@demo.com
-    content: 'Does anyone know a good after-school tutoring program near Humboldt Park? My son needs help with math. Any recommendations appreciated! 🙏',
-    tags: ['tutoring', 'humboldt-park', 'education'],
-    taskCapacity: null,
-    taskFilled: null,
-    hoursReward: null,
-    isInnerOnly: false,
-    minutesAgo: 45,
+    authorEmail: 'looper@demo.com',
+    content: 'Does anyone know a good after-school tutoring program near Humboldt Park? My son needs help with math.',
+    tags: ['tutoring', 'humboldt-park'],
+    taskCapacity: null, taskFilled: null, hoursReward: null,
+    isInnerOnly: false, minutesAgo: 45,
   },
   {
-    authorIndex: 3, // inner2@demo.com
-    content: 'URGENT: We need 5 drivers to deliver meal kits to seniors in the 60647 zip code this Thursday morning. Each route takes about 1.5 hours. Gas reimbursement available.',
-    tags: ['delivery', 'logan-square', 'seniors', 'urgent'],
-    taskCapacity: 5,
-    taskFilled: 5,
-    hoursReward: 1.5,
-    isInnerOnly: false,
-    minutesAgo: 120,
+    authorEmail: 'inner2@demo.com',
+    content: 'URGENT: We need 5 drivers to deliver meal kits to seniors in the 60647 zip code this Thursday morning. Each route is about 1.5 hours.',
+    tags: ['delivery', 'logan-square', 'seniors'],
+    taskCapacity: 5, taskFilled: 5, hoursReward: 1.5,
+    isInnerOnly: false, minutesAgo: 120,
   },
   {
-    authorIndex: 1, // looper2@demo.com
-    content: 'Just finished 10 hours volunteering at the Garfield Park Conservatory cleanup! Feeling good about giving back to the neighborhood. If anyone wants to join next month, keep an eye on the feed 🌿',
-    tags: ['garfield-park', 'cleanup', 'community'],
-    taskCapacity: null,
-    taskFilled: null,
-    hoursReward: null,
-    isInnerOnly: false,
-    minutesAgo: 200,
+    authorEmail: 'looper2@demo.com',
+    content: 'Just finished 10 hours volunteering at the Garfield Park Conservatory cleanup! If anyone wants to join next month, keep an eye on the feed.',
+    tags: ['garfield-park', 'cleanup'],
+    taskCapacity: null, taskFilled: null, hoursReward: null,
+    isInnerOnly: false, minutesAgo: 200,
   },
   {
-    authorIndex: 2, // inner@demo.com
-    content: 'Free youth basketball clinic this weekend at Dvorak Park! Ages 8-14. We need 2 volunteers to help coach. No experience necessary — just energy and patience 🏀',
-    tags: ['youth', 'sports', 'pilsen', 'volunteer'],
-    taskCapacity: 2,
-    taskFilled: 0,
-    hoursReward: 3,
-    isInnerOnly: false,
-    minutesAgo: 300,
+    authorEmail: 'inner@demo.com',
+    content: 'Free youth basketball clinic this weekend at Dvorak Park! Ages 8-14. We need 2 volunteers to help coach.',
+    tags: ['youth', 'sports', 'pilsen'],
+    taskCapacity: 2, taskFilled: 0, hoursReward: 3,
+    isInnerOnly: false, minutesAgo: 300,
   },
   {
-    authorIndex: 3, // inner2@demo.com
-    content: 'We have extra canned goods and dry pasta available for any community org that needs them. DM us to arrange pickup this week.',
-    tags: ['resources', 'food', 'logan-square'],
-    taskCapacity: null,
-    taskFilled: null,
-    hoursReward: null,
-    isInnerOnly: true, // Inner Loop only
-    minutesAgo: 400,
+    authorEmail: 'inner2@demo.com',
+    content: 'We have extra canned goods and dry pasta available for any community org that needs them. DM us to arrange pickup.',
+    tags: ['resources', 'food'],
+    taskCapacity: null, taskFilled: null, hoursReward: null,
+    isInnerOnly: true, minutesAgo: 400,
   },
   {
-    authorIndex: 0, // looper@demo.com
-    content: 'Shoutout to Pilsen Community Center for the amazing coat drive! Got my kids warm jackets and met so many great neighbors. This is what InnerLoop is about ❤️',
-    tags: ['pilsen', 'gratitude', 'community'],
-    taskCapacity: null,
-    taskFilled: null,
-    hoursReward: null,
-    isInnerOnly: false,
-    minutesAgo: 500,
+    authorEmail: 'looper@demo.com',
+    content: 'Shoutout to Pilsen Community Center for the amazing coat drive! Got my kids warm jackets and met so many great neighbors.',
+    tags: ['pilsen', 'gratitude'],
+    taskCapacity: null, taskFilled: null, hoursReward: null,
+    isInnerOnly: false, minutesAgo: 500,
   },
 ];
 
@@ -147,127 +126,122 @@ export default function SeedPage() {
   async function runSeed() {
     setRunning(true);
     setStatus([]);
+
+    // Sign out first
+    try { await signOut(auth); } catch (e) {}
+    await new Promise(r => setTimeout(r, 300));
+
+    // Step 1: Create accounts sequentially
+    log('Creating demo accounts...', 'info');
     const userUIDs = {};
 
-    // Step 1: Create demo accounts
-    log('Creating demo accounts...', 'info');
     for (const u of DEMO_USERS) {
       try {
+        // Try create
         const cred = await createUserWithEmailAndPassword(auth, u.email, DEMO_PASSWORD);
         userUIDs[u.email] = cred.user.uid;
-
         await setDoc(doc(db, 'users', cred.user.uid), {
-          name: u.name,
-          role: u.role,
-          isVerified: u.isVerified,
-          tags: u.tags,
-          starRating: u.starRating,
-          verifiedHours: u.verifiedHours,
-          loopCredits: u.loopCredits,
-          ageVerification: false,
-          location: null,
-          createdAt: serverTimestamp(),
+          name: u.name, role: u.role, isVerified: u.isVerified,
+          tags: u.tags, starRating: u.starRating,
+          verifiedHours: u.verifiedHours, loopCredits: u.loopCredits,
+          ageVerification: false, location: null, createdAt: serverTimestamp(),
         });
-
-        log(`✓ Created ${u.email} (${u.name})`, 'success');
+        log(`Created ${u.name} (${u.email})`, 'success');
+        await signOut(auth);
       } catch (err) {
         if (err.code === 'auth/email-already-in-use') {
-          // Account exists — sign in to get UID
           try {
             const cred = await signInWithEmailAndPassword(auth, u.email, DEMO_PASSWORD);
             userUIDs[u.email] = cred.user.uid;
-            log(`• ${u.email} already exists — using existing`, 'info');
-          } catch (e) {
-            log(`✗ ${u.email} — login failed: ${e.message}`, 'error');
+            // Update profile to ensure it's correct
+            await setDoc(doc(db, 'users', cred.user.uid), {
+              name: u.name, role: u.role, isVerified: u.isVerified,
+              tags: u.tags, starRating: u.starRating,
+              verifiedHours: u.verifiedHours, loopCredits: u.loopCredits,
+              ageVerification: false, location: null, createdAt: serverTimestamp(),
+            });
+            log(`Updated ${u.name} (already existed)`, 'info');
+            await signOut(auth);
+          } catch (e2) {
+            log(`Failed ${u.email}: ${e2.message}`, 'error');
           }
         } else {
-          log(`✗ ${u.email} — ${err.message}`, 'error');
+          log(`Failed ${u.email}: ${err.message}`, 'error');
         }
       }
+      await new Promise(r => setTimeout(r, 400));
     }
 
-    // Sign out so we're clean
-    await signOut(auth).catch(() => {});
-
-    // Step 2: Create demo posts
+    // Step 2: Sign in as inner@demo.com to create posts (needs auth for Firestore)
     log('', 'info');
     log('Creating demo posts...', 'info');
+
+    // Sign in as one user to write posts
+    try {
+      await signInWithEmailAndPassword(auth, 'inner@demo.com', DEMO_PASSWORD);
+    } catch (e) {
+      log('Could not sign in to create posts: ' + e.message, 'error');
+    }
+
     for (const p of DEMO_POSTS) {
+      const authorUID = userUIDs[p.authorEmail];
+      if (!authorUID) { log(`Skipped — no UID for ${p.authorEmail}`, 'error'); continue; }
+      const author = DEMO_USERS.find(u => u.email === p.authorEmail);
       try {
-        const author = DEMO_USERS[p.authorIndex];
-        const authorUID = userUIDs[author.email];
-        if (!authorUID) {
-          log(`✗ Skipping post — no UID for ${author.email}`, 'error');
-          continue;
-        }
-
-        const postTime = new Date(Date.now() - p.minutesAgo * 60 * 1000);
-
         await addDoc(collection(db, 'posts'), {
           authorID: authorUID,
           authorName: author.name,
           authorRole: author.role,
           content: p.content,
           tags: p.tags,
-          postTime: Timestamp.fromDate(postTime),
+          postTime: Timestamp.fromDate(new Date(Date.now() - p.minutesAgo * 60000)),
           isInnerOnly: p.isInnerOnly,
           taskCapacity: p.taskCapacity,
           taskFilled: p.taskFilled,
-          waitlist: p.taskCapacity && p.taskFilled >= p.taskCapacity ? [userUIDs['looper2@demo.com']].filter(Boolean) : [],
+          waitlist: [],
           joinedUsers: [],
           hoursReward: p.hoursReward,
           location: null,
         });
-
-        const preview = p.content.slice(0, 50) + '...';
-        log(`✓ Post: "${preview}"`, 'success');
+        log(`"${p.content.slice(0, 40)}..."`, 'success');
       } catch (err) {
-        log(`✗ Post failed: ${err.message}`, 'error');
+        log(`Post failed: ${err.message}`, 'error');
       }
     }
 
-    // Step 3: Create a demo review
+    // Step 3: Reviews
     log('', 'info');
     log('Creating demo reviews...', 'info');
     try {
-      const reviewerUID = userUIDs['inner@demo.com'];
-      const reviewedUID = userUIDs['looper@demo.com'];
-      if (reviewerUID && reviewedUID) {
+      if (userUIDs['inner@demo.com'] && userUIDs['looper@demo.com']) {
         await addDoc(collection(db, 'reviews'), {
-          reviewerID: reviewerUID,
-          reviewedID: reviewedUID,
-          rating: 5,
-          hoursVerified: 2,
-          comment: 'Maria was incredible — arrived early, organized everything, and stayed to help clean up. A true community asset!',
-          wasWaitlisted: false,
-          createdAt: serverTimestamp(),
+          reviewerID: userUIDs['inner@demo.com'],
+          reviewedID: userUIDs['looper@demo.com'],
+          rating: 5, hoursVerified: 2,
+          comment: 'Maria was incredible — arrived early and stayed to help. A true asset!',
+          wasWaitlisted: false, createdAt: serverTimestamp(),
         });
-        log('✓ Review: Pilsen CC → Maria G. (5 stars)', 'success');
-
+        log('Pilsen CC → Maria G. (5 stars)', 'success');
+      }
+      if (userUIDs['inner2@demo.com'] && userUIDs['looper2@demo.com']) {
         await addDoc(collection(db, 'reviews'), {
           reviewerID: userUIDs['inner2@demo.com'],
           reviewedID: userUIDs['looper2@demo.com'],
-          rating: 4,
-          hoursVerified: 3,
-          comment: 'Darius was reliable and handled the delivery route efficiently. Would welcome back anytime.',
-          wasWaitlisted: true,
-          createdAt: serverTimestamp(),
+          rating: 4, hoursVerified: 3,
+          comment: 'Darius handled the delivery route efficiently. Would welcome back!',
+          wasWaitlisted: true, createdAt: serverTimestamp(),
         });
-        log('✓ Review: Logan Sq → Darius W. (4 stars, waitlist 2×)', 'success');
+        log('Logan Sq → Darius W. (4 stars, 2x bonus)', 'success');
       }
     } catch (err) {
-      log(`✗ Review failed: ${err.message}`, 'error');
+      log(`Review failed: ${err.message}`, 'error');
     }
 
-    log('', 'info');
-    log('🎉 SEED COMPLETE!', 'success');
-    log('', 'info');
-    log('Demo accounts (password: demo1234):', 'info');
-    log('  looper@demo.com  — Maria G.', 'info');
-    log('  looper2@demo.com — Darius W.', 'info');
-    log('  inner@demo.com   — Pilsen Community Center', 'info');
-    log('  inner2@demo.com  — Logan Square Food Pantry', 'info');
+    // Sign out when done
+    try { await signOut(auth); } catch (e) {}
 
+    log('', 'info');
+    log('SEED COMPLETE! Go to Login to try demo accounts.', 'success');
     setDone(true);
     setRunning(false);
   }
@@ -279,7 +253,6 @@ export default function SeedPage() {
           <span className="font-display text-2xl font-extrabold text-loop-green">
             Inner<span className="bg-gradient-to-r from-loop-purple to-loop-red bg-clip-text text-transparent">Loop</span>
           </span>
-          <p className="text-sm text-loop-green/40 mt-1">Demo Data Seed</p>
         </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-loop-gray/50 overflow-hidden">
@@ -290,48 +263,38 @@ export default function SeedPage() {
               </div>
               <div>
                 <h2 className="font-display text-lg font-bold">Seed Demo Data</h2>
-                <p className="text-xs text-loop-green/40">Creates 4 accounts, 7 posts, 2 reviews</p>
+                <p className="text-xs text-loop-green/40">4 accounts · 7 posts · 2 reviews</p>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-loop-blue/10 border border-loop-blue/15 text-sm text-loop-green/60 space-y-1">
-              <p className="font-semibold text-loop-green/80">Demo accounts (password: demo1234)</p>
-              <p>• <strong>looper@demo.com</strong> — Maria G. (Looper)</p>
-              <p>• <strong>looper2@demo.com</strong> — Darius W. (Looper)</p>
-              <p>• <strong>inner@demo.com</strong> — Pilsen Community Center (Inner ✓)</p>
-              <p>• <strong>inner2@demo.com</strong> — Logan Square Food Pantry (Inner ✓)</p>
+            <div className="p-4 rounded-xl bg-loop-blue/10 border border-loop-blue/15 text-xs space-y-1 text-loop-green/60">
+              <p className="font-semibold text-loop-green/80 text-sm">Demo accounts (password: demo1234)</p>
+              <p>looper@demo.com — Maria G. (Looper)</p>
+              <p>looper2@demo.com — Darius W. (Looper)</p>
+              <p>inner@demo.com — Pilsen Community Center (Inner ✓)</p>
+              <p>inner2@demo.com — Logan Square Food Pantry (Inner ✓)</p>
             </div>
 
             {!done ? (
-              <button
-                onClick={runSeed}
-                disabled={running}
+              <button onClick={runSeed} disabled={running}
                 className={`w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-full font-semibold text-sm text-white transition-all
-                  ${running ? 'bg-loop-purple/60 cursor-not-allowed' : 'bg-loop-purple hover:shadow-lg hover:scale-[1.02]'}`}
-              >
+                  ${running ? 'bg-loop-purple/60' : 'bg-loop-purple hover:shadow-lg hover:scale-[1.02]'}`}>
                 {running ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
                 {running ? 'Seeding...' : 'Run Seed'}
               </button>
             ) : (
-              <button
-                onClick={() => navigate('/login')}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-loop-green font-semibold text-sm text-white hover:shadow-lg hover:scale-[1.02] transition-all"
-              >
+              <button onClick={() => navigate('/login')}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-loop-green font-semibold text-sm text-white hover:shadow-lg transition-all">
                 <Check size={18} /> Go to Login
               </button>
             )}
           </div>
 
-          {/* Log output */}
           {status.length > 0 && (
-            <div className="border-t border-loop-gray/30 px-6 py-4 max-h-64 overflow-y-auto">
-              <div className="space-y-1 font-mono text-xs">
+            <div className="border-t border-loop-gray/30 px-6 py-4 max-h-72 overflow-y-auto">
+              <div className="space-y-0.5 font-mono text-xs">
                 {status.map((s, i) => (
-                  <p key={i} className={
-                    s.type === 'success' ? 'text-green-600' :
-                    s.type === 'error' ? 'text-loop-red' :
-                    'text-loop-green/50'
-                  }>
+                  <p key={i} className={s.type === 'success' ? 'text-green-600' : s.type === 'error' ? 'text-loop-red' : 'text-loop-green/50'}>
                     {s.msg || '\u00A0'}
                   </p>
                 ))}

@@ -27,7 +27,7 @@ function ProtectedRoute({ children }) {
   }
   return user ? (
     <>
-      <div className="pb-16 sm:pb-0">{children}</div>
+      <div className="pb-16">{children}</div>
       <BottomNav />
     </>
   ) : <Navigate to="/login" />;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   collection,
   query,
@@ -13,24 +13,16 @@ import CreatePost from '../components/CreatePost';
 import PostCard from '../components/PostCard';
 import {
   MapPin,
-  Filter,
   Plus,
-  LogOut,
-  User,
-  Building2,
-  Heart,
   X,
   Sparkles,
   Loader2,
   Search,
   Lock,
-  ClipboardList,
-  MessageSquare,
 } from 'lucide-react';
 
 export default function FeedPage() {
-  const { profile, logout } = useAuth();
-  const navigate = useNavigate();
+  const { profile } = useAuth();
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -79,11 +71,6 @@ export default function FeedPage() {
       )
     : posts;
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
-  };
-
   const isInner = profile?.role === 'Inner';
   const isVerifiedInner = isInner && profile?.isVerified;
 
@@ -111,47 +98,6 @@ export default function FeedPage() {
                 Inner Loop
               </button>
             )}
-
-            {/* My Tasks */}
-            <button
-              onClick={() => navigate('/tasks')}
-              className="w-9 h-9 rounded-full bg-loop-gray flex items-center justify-center hover:bg-loop-blue/20 transition-colors"
-              title="My Tasks"
-            >
-              <ClipboardList size={16} className="text-loop-green/60" />
-            </button>
-
-            {/* Messages — only for verified Inners */}
-            {isVerifiedInner && (
-              <button
-                onClick={() => navigate('/messages')}
-                className="w-9 h-9 rounded-full bg-loop-gray flex items-center justify-center hover:bg-loop-purple/15 transition-colors"
-                title="Inner Loop DMs"
-              >
-                <MessageSquare size={16} className="text-loop-purple" />
-              </button>
-            )}
-
-            {/* Profile link */}
-            <button
-              onClick={() => navigate('/profile')}
-              className="w-9 h-9 rounded-full bg-loop-gray flex items-center justify-center hover:bg-loop-gray/80 transition-colors"
-              title={profile?.name}
-            >
-              {isInner
-                ? <Building2 size={16} className="text-loop-purple" />
-                : <Heart size={16} className="text-loop-red" />
-              }
-            </button>
-
-            {/* Logout */}
-            <button
-              onClick={handleLogout}
-              className="w-9 h-9 rounded-full bg-loop-gray flex items-center justify-center hover:bg-loop-red/10 hover:text-loop-red transition-colors"
-              title="Sign out"
-            >
-              <LogOut size={16} />
-            </button>
           </div>
         </div>
       </nav>
