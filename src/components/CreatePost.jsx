@@ -1,3 +1,10 @@
+/**
+ * CreatePost — Post creation and editing form
+ * 
+ * Full-screen modal for creating or editing volunteer task posts.
+ * Supports task capacity, schedule, requirements, tags, hours reward,
+ * and Inner-only visibility. Writes to the posts collection in Firestore.
+ */
 import React, { useState } from 'react';
 import { collection, addDoc, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';

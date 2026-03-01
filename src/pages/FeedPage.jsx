@@ -1,3 +1,11 @@
+/**
+ * FeedPage — Main post feed
+ * 
+ * Displays all public posts sorted by time. Supports search by tag,
+ * content, or author name. Verified Inner users can toggle the private
+ * Inner Loop feed. Uses a single onSnapshot listener with client-side
+ * filtering to avoid Firestore composite index requirements.
+ */
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, onSnapshot } from 'firebase/firestore';

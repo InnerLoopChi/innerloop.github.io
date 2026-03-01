@@ -1,3 +1,10 @@
+/**
+ * PostCard — Feed post component
+ * 
+ * Renders a single post card with author info, content, tags, schedule,
+ * task capacity bar, and apply/waitlist button. Also includes the
+ * ApplyModal for submitting applications and the edit/delete menu.
+ */
 import React, { useState } from 'react';
 import { useToast } from '../contexts/ToastContext';
 import { doc, updateDoc, deleteDoc, getDoc, arrayUnion, increment } from 'firebase/firestore';

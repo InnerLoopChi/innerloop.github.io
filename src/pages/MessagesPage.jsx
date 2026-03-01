@@ -1,3 +1,10 @@
+/**
+ * MessagesPage — Direct messaging system
+ * 
+ * Handles the full DM flow: conversation list, message thread,
+ * request/accept for new conversations, real-time sync via onSnapshot,
+ * and notification triggers on new messages and accepted requests.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {

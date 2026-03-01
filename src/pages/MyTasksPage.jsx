@@ -1,3 +1,10 @@
+/**
+ * MyTasksPage — Application management
+ * 
+ * Inner users see their posted tasks and can accept/reject applicants.
+ * Looper users see tasks they applied to and their application status.
+ * Includes task completion, hour verification, and review triggers.
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {

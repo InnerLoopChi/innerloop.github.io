@@ -1,3 +1,10 @@
+/**
+ * MapPage — Interactive neighborhood map
+ * 
+ * Renders a Leaflet map with markers for each Chicago neighborhood.
+ * Marker sizes scale based on post count. Clicking a marker shows
+ * posts for that area, and clicking a post opens the full PostCard.
+ */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, onSnapshot } from 'firebase/firestore';
