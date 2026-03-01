@@ -7,6 +7,8 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
+  where,
   updateDoc,
   Timestamp,
 } from 'firebase/firestore';
@@ -159,10 +161,30 @@ export default function MessagesPage() {
 
   // Start new conversation
   async function startConvo(otherUser) {
-    // Check if conversation already exists
-    const existing = conversations.find(c =>
-      c.participants.includes(otherUser.id)
+    // Check local state first
+    let existing = conversations.find(c =>
+      c.participants?.includes(otherUser.id) && c.participants?.includes(user.uid)
     );
+
+    // If not found locally, query Firestore directly to prevent duplicates
+    if (!existing) {
+      try {
+        const convosSnap = await getDocs(
+          query(collection(db, 'conversations'),
+            where('participants', 'array-contains', user.uid)
+          )
+        );
+        const match = convosSnap.docs.find(d => {
+          const data = d.data();
+          return data.participants?.includes(otherUser.id);
+        });
+        if (match) {
+          existing = { id: match.id, ...match.data() };
+        }
+      } catch (err) {
+        console.error('Convo lookup error:', err);
+      }
+    }
 
     if (existing) {
       setActiveConvo(existing);
@@ -306,8 +328,8 @@ export default function MessagesPage() {
               return (
                 <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isMe
-                      ? 'bg-loop-purple text-white rounded-br-md'
-                      : 'bg-white border border-loop-gray/50 rounded-bl-md'
+                    ? 'bg-loop-purple text-white rounded-br-md'
+                    : 'bg-white border border-loop-gray/50 rounded-bl-md'
                     }`}>
                     <p className="text-sm leading-relaxed">{msg.text}</p>
                     <p className={`text-[10px] mt-1 ${isMe ? 'text-white/50' : 'text-loop-green/30'}`}>
@@ -321,7 +343,7 @@ export default function MessagesPage() {
           </div>
 
           {/* Input */}
-          <div className="sticky bottom-0 bg-white border-t border-loop-gray/50 px-4 py-3">
+          <div className="sticky bottom-0 bg-white border-t border-loop-gray/50 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
             <form onSubmit={handleSend} className="flex items-center gap-2">
               <input
                 ref={inputRef}

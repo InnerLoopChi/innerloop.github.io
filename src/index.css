@@ -78,3 +78,50 @@
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-out both;
 }
+
+/* ─── Android / cross-browser fallbacks ─── */
+
+/* Backdrop blur support for Android Chrome & older browsers */
+@supports not (backdrop-filter: blur(1px)) {
+  .backdrop-blur-sm { background-color: rgba(0,0,0,0.5) !important; }
+  .backdrop-blur-xl { background-color: rgba(255,255,255,0.97) !important; }
+}
+
+/* Ensure -webkit- prefix for Safari/Android */
+[class*="backdrop-blur"] {
+  -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+}
+
+/* Mobile input zoom prevention */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Bottom nav safe area padding for page content */
+.pb-nav {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Purple gradient shine that works on Android */
+.gradient-shine {
+  position: relative;
+  overflow: hidden;
+}
+.gradient-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  animation: shine 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes shine {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
