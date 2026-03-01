@@ -27,6 +27,7 @@ import {
   Plus,
   CheckCheck,
   Trash2,
+  User,
 } from 'lucide-react';
 
 export default function MessagesPage() {
