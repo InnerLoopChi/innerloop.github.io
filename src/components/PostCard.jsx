@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useToast } from '../contexts/ToastContext';
 import {
   doc,
   updateDoc,
@@ -22,6 +23,7 @@ import {
 
 export default function PostCard({ post, currentUser }) {
   const [joining, setJoining] = useState(false);
+  const toast = useToast();
 
   const isTask = post.taskCapacity != null && post.taskCapacity > 0;
   const isFull = isTask && (post.taskFilled || 0) >= post.taskCapacity;
@@ -44,19 +46,20 @@ export default function PostCard({ post, currentUser }) {
     try {
       const ref = doc(db, 'posts', post.id);
       if (isFull) {
-        // Join waitlist
         await updateDoc(ref, {
           waitlist: arrayUnion(currentUser.id),
         });
+        toast.reward('Joined waitlist! You\'ll earn 2× rewards if a spot opens.');
       } else {
-        // Join task directly
         await updateDoc(ref, {
           taskFilled: increment(1),
           joinedUsers: arrayUnion(currentUser.id),
         });
+        toast.success('You\'ve joined this task!');
       }
     } catch (err) {
       console.error('Join error:', err);
+      toast.error('Failed to join. Please try again.');
     } finally {
       setJoining(false);
     }

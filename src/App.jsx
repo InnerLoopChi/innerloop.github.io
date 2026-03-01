@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import LandingPage from './pages/LandingPage';
 import SignUpPage from './pages/SignUpPage';
 import LoginPage from './pages/LoginPage';
@@ -8,6 +9,7 @@ import FeedPage from './pages/FeedPage';
 import ProfilePage from './pages/ProfilePage';
 import MyTasksPage from './pages/MyTasksPage';
 import MessagesPage from './pages/MessagesPage';
+import BottomNav from './components/BottomNav';
 
 // Protected route — redirects to login if not authenticated
 function ProtectedRoute({ children }) {
@@ -19,7 +21,12 @@ function ProtectedRoute({ children }) {
       </div>
     );
   }
-  return user ? children : <Navigate to="/login" />;
+  return user ? (
+    <>
+      <div className="pb-16 sm:pb-0">{children}</div>
+      <BottomNav />
+    </>
+  ) : <Navigate to="/login" />;
 }
 
 // Redirect authenticated users away from auth pages
@@ -94,9 +101,11 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   );
 }
