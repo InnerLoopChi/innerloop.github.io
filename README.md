@@ -1,253 +1,78 @@
 # InnerLoop
 
-**Helping the Inner as a Looper** — A hyper-local, interactive feed connecting Chicago's neighborhood ecosystem.
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=for-the-badge&logo=leaflet&logoColor=white)
+![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
+![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-222222?style=for-the-badge&logo=github&logoColor=white)
 
-InnerLoop bridges the gap between everyday people (**Loopers**) and trusted local organizations (**Inners**) so neighborhoods thrive — one task, one hour, one connection at a time.
+Neighborhood volunteering platform for Chicago. Two roles: **Inner** (organizations posting tasks) and **Looper** (volunteers applying to help).
 
----
+**Live:** [innerloopchi.github.io/innerloop.github.io](https://innerloopchi.github.io/innerloop.github.io/)
 
-## Quick Start (Run Locally)
-
-### One-Click Setup Scripts
-
-The fastest way — handles clone, install, Firebase config prompts, and launches the dev server:
-
-| Platform | Command |
-|---|---|
-| **Windows (CMD)** | Double-click `start-windows.bat` or run it in Command Prompt |
-| **Windows (PowerShell)** | `powershell -ExecutionPolicy Bypass -File start-windows.ps1` |
-| **Git Bash / WSL / macOS / Linux** | `bash start.sh` |
-
-### Manual Setup
-
-#### Prerequisites
-
-- **Node.js** 18+ — [Download](https://nodejs.org/)
-- **npm** (comes with Node)
-- A **Firebase project** (free tier works fine) — [Create one](https://console.firebase.google.com/)
-
-### 1. Clone the repo
+## Setup
 
 ```bash
-git clone https://github.com/InnerLoopChi/InnerLoop.git
-cd InnerLoop
-```
-
-### 2. Install dependencies
-
-```bash
+git clone https://github.com/InnerLoopChi/innerloop.github.io.git
+cd innerloop.github.io
 npm install
-```
-
-### 3. Set up Firebase
-
-You need a Firebase project with **Authentication** and **Cloud Firestore** enabled.
-
-#### a) Create a Firebase project
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Click **Add project** → name it (e.g. `innerloop-dev`) → create
-3. In the project dashboard, click **Web** (</>) to register a web app
-4. Copy the config values it shows you
-
-#### b) Enable Authentication
-1. In Firebase Console → **Build** → **Authentication** → **Get started**
-2. Click **Email/Password** → **Enable** → **Save**
-
-#### c) Enable Firestore
-1. In Firebase Console → **Build** → **Firestore Database** → **Create database**
-2. Choose **Start in test mode** (we'll deploy proper rules later)
-3. Pick a region close to you → **Enable**
-
-#### d) Create Firestore indexes
-The app uses compound queries that require indexes. Either:
-- **Option A**: Just run the app — Firebase will show index-creation links in the browser console when queries fail. Click each link to auto-create.
-- **Option B**: Install Firebase CLI and deploy indexes:
-  ```bash
-  npm install -g firebase-tools
-  firebase login
-  firebase use --add  # select your project
-  firebase deploy --only firestore:indexes
-  ```
-
-### 4. Create your `.env` file
-
-Copy the example and fill in your Firebase config values:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your values from step 3a:
-
-```env
-VITE_FIREBASE_API_KEY=AIzaSy...your-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=1:123456789:web:abc123
-```
-
-### 5. Run the dev server
-
-```bash
 npm run dev
 ```
 
-The app will open at **http://localhost:5173**
+Firebase is preconfigured. No env file needed.
 
-That's it! You can now:
-- Visit the landing page at `/`
-- Sign up as a Looper or Inner at `/signup`
-- Browse the feed at `/feed`
-- View your profile at `/profile`
+## Demo accounts
 
----
+Visit `/seed` first to populate the database. Password for everything is `demo1234`
 
-## Development Workflow
+**Loopers (volunteers)**
+<looper@demo.com> is Maria G.
+<looper2@demo.com> is Darius W.
+<looper3@demo.com> is Jasmine R.
 
-### Available Commands
+**Inners (organizations)**
+<inner@demo.com> is Pilsen Community Center
+<inner2@demo.com> is Logan Square Food Pantry
+<inner3@demo.com> is The NaN Center
 
-| Command | What it does |
-|---|---|
-| `npm run dev` | Start Vite dev server with hot reload |
-| `npm run build` | Build production bundle to `dist/` |
-| `npm run preview` | Preview production build locally |
+## Project structure
 
-### Hot Reload
+Everything lives in `src/`. The auth logic is in `contexts/AuthContext.jsx` and firebase config is in `lib/firebase.js`.
 
-Vite provides instant hot module replacement. Just edit any file in `src/` and the browser updates immediately — no manual refresh needed.
+The pages folder has all the main views. `FeedPage` is the main feed, `MapPage` handles the leaflet map, `MyTasksPage` is where organizations manage applications, `CalendarPage` shows upcoming tasks, `MessagesPage` is the whole DM system, `ProfilePage` has the user profile and reward redemption, and `SeedPage` is for loading demo data.
 
-### File Structure
+For components we have `PostCard` which renders each post with the apply button, `CreatePost` for making new posts, `BottomNav` for the tab bar, and `NotificationBell` for the real time notification dropdown.
 
-```
-InnerLoop/
-├── index.html                  # Root HTML
-├── package.json                # Dependencies & scripts
-├── vite.config.js              # Vite configuration
-├── tailwind.config.js          # Tailwind with InnerLoop color palette
-├── postcss.config.js           # PostCSS for Tailwind
-├── firebase.json               # Firebase CLI config
-├── firestore.rules             # Firestore security rules
-├── firestore.indexes.json      # Firestore compound query indexes
-├── .env.example                # Template for Firebase env vars
-├── start-windows.bat           # One-click Windows CMD setup
-├── start-windows.ps1           # PowerShell setup
-├── start.sh                    # Bash setup (Mac/Linux/WSL)
-├── ARCHITECTURE.md             # Firestore schema documentation
-├── CHANGELOG.md                # Detailed change log by chunk
-├── SETUP.md                    # 5-min local dev guide
-│
-├── src/
-│   ├── main.jsx                # React entry + ErrorBoundary
-│   ├── App.jsx                 # Router + AuthProvider + ToastProvider + BottomNav
-│   ├── index.css               # Tailwind directives + custom animations
-│   │
-│   ├── lib/
-│   │   └── firebase.js         # Firebase init (Auth + Firestore)
-│   │
-│   ├── contexts/
-│   │   ├── AuthContext.jsx      # Auth state, signup/login/logout, Firestore profile
-│   │   └── ToastContext.jsx     # Global toast notifications
-│   │
-│   ├── pages/
-│   │   ├── LandingPage.jsx      # Marketing landing page
-│   │   ├── SignUpPage.jsx       # 2-step signup (role select → form)
-│   │   ├── LoginPage.jsx        # Email/password login
-│   │   ├── FeedPage.jsx         # Real-time local feed + Inner Loop toggle
-│   │   ├── MyTasksPage.jsx      # Task management for Inners + Loopers
-│   │   ├── MessagesPage.jsx     # Inner Loop DMs (verified Inners only)
-│   │   ├── ProfilePage.jsx      # Loop Wallet + reviews + tags
-│   │   └── SettingsPage.jsx     # Account settings + delete account
-│   │
-│   └── components/
-│       ├── BottomNav.jsx        # Mobile bottom tab bar
-│       ├── PostCard.jsx         # Feed post (tasks, waitlist, delete)
-│       ├── CreatePost.jsx       # New post modal
-│       ├── ReviewModal.jsx      # Star rating + 2x multiplier
-│       └── ErrorBoundary.jsx    # Global error catch
-```
+## Key features and how they work
 
----
+**Feed and posts** use a Firestore `onSnapshot` listener on the `posts` collection. Inner users create posts with task capacity, schedule, tags, and neighborhood. Loopers see a filtered feed and can apply.
 
-## Color Palette
+**Task applications** are stored as an `applicants` array inside each post document. When an Inner accepts or rejects, it updates the array entry status and creates a notification.
 
-All colors are tokenized as `loop-*` in Tailwind:
+**Map** loads Leaflet dynamically and creates markers for each Chicago neighborhood. Marker size scales with post count. Clicking a marker shows posts for that area and tapping a post opens the full PostCard component.
 
-| Token | Hex | Usage |
-|---|---|---|
-| `loop-red` | `#f18989` | Warmth, Looper accent, CTAs |
-| `loop-purple` | `#8B6897` | Trust, Inner accent, links |
-| `loop-gray` | `#e8e6e6` | Backgrounds, neutrals |
-| `loop-green` | `#0a3200` | Text, high contrast, primary buttons |
-| `loop-blue` | `#aFD2E9` | Accents, highlights, tag backgrounds |
+**DMs** use a `conversations` collection with a `messages` subcollection. New conversations start with `status: pending`. The recipient has to accept before messages can be exchanged. Real time listeners keep both sides in sync.
 
----
+**Notifications** are stored in a `notifications` collection filtered by `recipientId`. Triggers fire on task application accept/reject, new DM request, DM accepted, and new message received.
 
-## Key Concepts
+**Rewards** track verified volunteer hours as `loopCredits` on the user document. Loopers can redeem credits for rewards on their profile page.
 
-### Looper (Personal Account)
-An everyday person who can give and ask for help. Browses tasks, earns verified hours and Loop Credits, builds a Star Rating.
+## Firestore collections
 
-### Inner (Business/Org Account)
-A verified organization that posts structured tasks, manages capacity, verifies hours, and accesses the private Inner Loop feed.
-
-### Waitlist & 2× Multiplier
-When a task is full, Loopers can join a waitlist. If a spot opens and they complete the task, their verified hours and Loop Credits are **doubled**.
-
-### Privacy
-Loopers can never see full job details of tasks assigned to other Loopers. The Inner Loop is a private layer hidden from the public feed.
-
----
+`users` has user profiles, role, verified status, and loop credits
+`posts` has volunteer tasks with schedule, capacity, and applicants array
+`conversations` has DM threads with participant info and pending/accepted status
+`conversations/{id}/messages` has individual messages in a thread
+`notifications` has notification entries filtered by recipientId
+`reviews` has reviews left by Inners for Loopers
 
 ## Deployment
 
-### Firebase Hosting (recommended)
+Built with Vite, deployed to GitHub Pages via `gh-pages` branch. The `404.html` redirect handles SPA routing on GitHub Pages.
 
 ```bash
-npm install -g firebase-tools
-firebase login
-firebase use --add          # select your project
-npm run build               # build production bundle
-firebase deploy             # deploys hosting + Firestore rules + indexes
+npm run build
 ```
-
-### Other Platforms
-
-The `dist/` folder after `npm run build` is a static site. Deploy it anywhere:
-- **Vercel**: `npx vercel --prod`
-- **Netlify**: Drag `dist/` to Netlify dashboard
-- **GitHub Pages**: Use `gh-pages` package
-
-> **Note**: For SPA routing to work, configure your host to redirect all paths to `index.html` (already configured in `firebase.json`).
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | React 18 + Vite 5 |
-| Styling | Tailwind CSS 3 (custom `loop-*` palette) |
-| Icons | lucide-react |
-| Routing | react-router-dom 6 |
-| Auth | Firebase Authentication (email/password) |
-| Database | Cloud Firestore (real-time) |
-| Fonts | Outfit (display) + DM Sans (body) via Google Fonts |
-
----
-
-## Contributing
-
-1. Fork the repo
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make your changes (keep chunks small — max 3 files at a time)
-4. Build check: `npm run build`
-5. Commit and push
-6. Open a PR to `main`
-
----
-
-## License
-
-MIT — Built for Chicago neighborhoods.

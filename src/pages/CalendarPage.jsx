@@ -1,10 +1,19 @@
+/**
+ * CalendarPage — Upcoming tasks calendar view
+ * 
+ * Shows a monthly calendar with task posts plotted by their scheduled
+ * start date. Clicking a date shows all tasks for that day.
+ * Uses onSnapshot for real-time updates.
+ */
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  Calendar, ChevronLeft, ChevronRight, Users, Clock, Building2, Heart, Loader2, Timer, CalendarDays,
+  Calendar, ChevronLeft, ChevronRight, Users, Clock, Building2, Heart, Loader2, Timer, CalendarDays, X
 } from 'lucide-react';
+import PostCard from '../components/PostCard';
+import NotificationBell from '../components/NotificationBell';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -16,6 +25,7 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
+  const [activePost, setActivePost] = useState(null);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'posts'), snap => {
@@ -83,10 +93,11 @@ export default function CalendarPage() {
   return (
     <div className="min-h-screen bg-loop-gray">
       <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-loop-gray/50">
-        <div className="max-w-2xl mx-auto px-4 py-3">
-          <h1 className="font-display text-lg font-extrabold flex items-center gap-2">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+          <button onClick={() => window.location.reload()} className="font-display text-lg font-extrabold flex items-center gap-2 hover:opacity-70 transition-opacity cursor-pointer">
             <Calendar size={18} className="text-loop-purple" /> Task Calendar
-          </h1>
+          </button>
+          <NotificationBell />
         </div>
       </div>
 
@@ -119,7 +130,7 @@ export default function CalendarPage() {
                   className={`relative aspect-square rounded-lg flex flex-col items-center justify-center text-xs transition-all
                     ${isSelected ? 'bg-loop-purple text-white scale-105 shadow-md' :
                       isToday ? 'bg-loop-purple/10 text-loop-purple font-bold ring-1 ring-loop-purple/30' :
-                      hasTasks ? 'bg-loop-green/5 hover:bg-loop-green/10' : 'hover:bg-loop-gray/50'}`}>
+                        hasTasks ? 'bg-loop-green/5 hover:bg-loop-green/10' : 'hover:bg-loop-gray/50'}`}>
                   {day}
                   {hasTasks && !isSelected && (
                     <div className="absolute bottom-0.5 flex gap-0.5">
@@ -139,7 +150,7 @@ export default function CalendarPage() {
             <h3 className="text-xs font-bold text-loop-green/60">{MONTHS[month]} {selectedDate} — {selectedTasks.length} task{selectedTasks.length !== 1 ? 's' : ''}</h3>
             {selectedTasks.length === 0 ? (
               <p className="bg-white rounded-2xl border border-loop-gray/50 p-6 text-center text-sm text-loop-green/40">No tasks this day</p>
-            ) : selectedTasks.map(t => <TaskRow key={t.id} task={t} fmtClock={fmtClock} />)}
+            ) : selectedTasks.map(t => <TaskRow key={t.id} task={t} fmtClock={fmtClock} onClick={() => setActivePost(t)} />)}
           </div>
         )}
 
@@ -147,7 +158,7 @@ export default function CalendarPage() {
         {ongoingTasks.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-xs font-bold text-loop-green/60 flex items-center gap-1"><Timer size={11} /> Ongoing Tasks</h3>
-            {ongoingTasks.map(t => <TaskRow key={t.id} task={t} fmtClock={fmtClock} ongoing />)}
+            {ongoingTasks.map(t => <TaskRow key={t.id} task={t} fmtClock={fmtClock} ongoing onClick={() => setActivePost(t)} />)}
           </div>
         )}
 
@@ -162,7 +173,7 @@ export default function CalendarPage() {
                 .filter(t => !t.schedule?.ongoing && getTaskDate(t) && getTaskDate(t) >= new Date())
                 .sort((a, b) => (getTaskDate(a) || 0) - (getTaskDate(b) || 0))
                 .slice(0, 8)
-                .map(t => <TaskRow key={t.id} task={t} fmtClock={fmtClock} showDate />)
+                .map(t => <TaskRow key={t.id} task={t} fmtClock={fmtClock} showDate onClick={() => setActivePost(t)} />)
             )}
             {!loading && tasks.filter(t => !t.schedule?.ongoing && getTaskDate(t) && getTaskDate(t) >= new Date()).length === 0 && (
               <p className="bg-white rounded-2xl border border-loop-gray/50 p-6 text-center text-sm text-loop-green/40">No upcoming tasks</p>
@@ -170,16 +181,31 @@ export default function CalendarPage() {
           </div>
         )}
       </div>
+
+      {/* Active Post Modal */}
+      {activePost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-loop-green/40 backdrop-blur-sm">
+          <div className="bg-loop-gray w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl relative p-2 shadow-2xl">
+            <button onClick={() => setActivePost(null)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-loop-green hover:bg-white hover:scale-105 transition-all shadow-sm">
+              <X size={16} />
+            </button>
+            <div className="pointer-events-auto">
+              <PostCard post={activePost} currentUser={profile} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function TaskRow({ task, fmtClock, ongoing, showDate }) {
+function TaskRow({ task, fmtClock, ongoing, showDate, onClick }) {
   const date = task.schedule?.startDate?.toDate ? task.schedule.startDate.toDate() : null;
   const endDate = task.schedule?.endDate?.toDate ? task.schedule.endDate.toDate() : null;
 
   return (
-    <div className="bg-white rounded-xl border border-loop-gray/50 p-3 flex items-center gap-3">
+    <button onClick={onClick} className="w-full text-left bg-white rounded-xl border border-loop-gray/50 p-3 flex items-center gap-3 hover:border-loop-purple/30 hover:shadow-sm transition-all group">
       {/* Date badge */}
       <div className="w-11 h-11 rounded-lg bg-loop-purple/10 flex flex-col items-center justify-center flex-shrink-0">
         {ongoing ? (
@@ -205,6 +231,6 @@ function TaskRow({ task, fmtClock, ongoing, showDate }) {
           {ongoing && <span className="text-loop-purple font-semibold">Ongoing</span>}
         </div>
       </div>
-    </div>
+    </button>
   );
 }

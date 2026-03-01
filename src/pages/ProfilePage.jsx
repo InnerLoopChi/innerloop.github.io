@@ -1,3 +1,10 @@
+/**
+ * ProfilePage — User profile, reviews, and reward redemption
+ * 
+ * Displays user info, verified hours, star rating, reviews received,
+ * and the Loop Credits reward store. Also handles profile editing
+ * and tag management.
+ */
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -5,6 +12,7 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  increment,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,10 +35,13 @@ import {
   Award,
   Zap,
 } from 'lucide-react';
+import NotificationBell from '../components/NotificationBell';
+import { useToast } from '../contexts/ToastContext';
 
 export default function ProfilePage() {
   const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
@@ -38,6 +49,7 @@ export default function ProfilePage() {
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState([]);
   const [savingTags, setSavingTags] = useState(false);
+  const [redeeming, setRedeeming] = useState(null);
 
   const isInner = profile?.role === 'Inner';
 
@@ -321,6 +333,11 @@ export default function ProfilePage() {
           )}
         </div>
 
+        {/* Redeem Rewards */}
+        {!isInner && (profile?.loopCredits || 0) > 0 && (
+          <RedeemRewards credits={profile?.loopCredits || 0} userId={user?.uid} redeeming={redeeming} setRedeeming={setRedeeming} toast={toast} />
+        )}
+
         {/* Settings & Sign Out */}
         <div className="pt-4 pb-8 space-y-3">
           <button
@@ -338,6 +355,66 @@ export default function ProfilePage() {
             Sign Out
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Reward Redemption ─── */
+const REWARDS = [
+  { id: 'coffee', label: 'Coffee at Local Café', cost: 5, emoji: '☕' },
+  { id: 'transit', label: 'CTA Day Pass', cost: 8, emoji: '🚌' },
+  { id: 'ticket', label: 'Community Event Ticket', cost: 10, emoji: '🎟️' },
+  { id: 'grocery', label: 'Grocery Store Discount', cost: 15, emoji: '🛒' },
+  { id: 'merch', label: 'InnerLoop T-Shirt', cost: 20, emoji: '👕' },
+];
+
+function RedeemRewards({ credits, userId, redeeming, setRedeeming, toast }) {
+  async function handleRedeem(reward) {
+    if (credits < reward.cost) { toast.error('Not enough credits!'); return; }
+    if (!window.confirm(`Redeem "${reward.label}" for ${reward.cost} credits?`)) return;
+    setRedeeming(reward.id);
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        loopCredits: increment(-reward.cost),
+      });
+      toast.success(`${reward.emoji} Redeemed "${reward.label}"!`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Redeem failed');
+    } finally {
+      setRedeeming(null);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <h2 className="font-display text-lg font-bold flex items-center gap-2 px-1">
+        <Award size={18} className="text-loop-red" /> Redeem Credits
+        <span className="text-sm font-normal text-loop-green/40">({credits} available)</span>
+      </h2>
+      <div className="space-y-2">
+        {REWARDS.map(r => (
+          <div key={r.id} className="bg-white rounded-2xl border border-loop-gray/50 p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">{r.emoji}</span>
+              <div>
+                <p className="text-sm font-semibold">{r.label}</p>
+                <p className="text-xs text-loop-green/40">{r.cost} credits</p>
+              </div>
+            </div>
+            <button
+              onClick={() => handleRedeem(r)}
+              disabled={credits < r.cost || redeeming === r.id}
+              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${credits >= r.cost
+                ? 'bg-loop-purple text-white hover:shadow-md hover:scale-105'
+                : 'bg-loop-gray text-loop-green/30 cursor-not-allowed'
+                }`}
+            >
+              {redeeming === r.id ? '...' : 'Redeem'}
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -27,7 +27,7 @@ export default function BottomNav() {
     { id: 'calendar', label: 'Calendar', icon: Calendar, path: '/calendar', show: true },
     { id: 'map', label: 'Map', icon: Map, path: '/map', show: true },
     { id: 'tasks', label: 'Tasks', icon: ClipboardList, path: '/tasks', show: true },
-    { id: 'messages', label: 'DMs', icon: MessageSquare, path: '/messages', show: isVerifiedInner },
+    { id: 'messages', label: 'DMs', icon: MessageSquare, path: '/messages', show: true },
     { id: 'profile', label: 'Profile', icon: User, path: '/profile', show: true },
   ].filter(t => t.show);
 
@@ -54,11 +54,8 @@ export default function BottomNav() {
                   : 'text-loop-green/35 hover:text-loop-green/60'
                   }`}
               >
-                <div className={`relative ${isActive ? 'scale-110' : ''} transition-transform`}>
+                <div className={`${isActive ? 'scale-110' : ''} transition-transform`}>
                   <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                  {isActive && (
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-loop-purple" />
-                  )}
                 </div>
                 <span className={`text-[9px] leading-tight ${isActive ? 'font-bold' : 'font-medium'}`}>
                   {tab.label}

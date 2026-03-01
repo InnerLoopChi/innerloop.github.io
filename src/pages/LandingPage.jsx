@@ -16,7 +16,11 @@ import {
   Sparkles,
   Menu,
   X,
+  Trash2,
+  Loader2
 } from 'lucide-react';
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 /* ─── Fade-in-on-scroll hook ─────────────────────────────────────── */
 function useReveal() {
@@ -358,7 +362,7 @@ function HowItWorks() {
               </div>
             </div>
             <p className="text-loop-green/65 leading-relaxed">
-              A <strong className="text-loop-green/90">verified organization</strong> — non-profit, local business, or community group — that posts structured tasks, manages capacity, and ensures services are completed properly even if plans change.
+              A <strong className="text-loop-green/90">verified organization</strong> &middot; non-profit, local business, or community group &middot; that posts structured tasks, manages capacity, and ensures services are completed properly even if plans change.
             </p>
             <ul className="space-y-3 text-sm">
               {['Post tasks & manage volunteer capacity', 'Verify hours and issue Loop Credits', 'Access the Inner Loop (private B2B feed)', 'DM other Inners, share space & resources'].map((item, i) => (
@@ -443,7 +447,7 @@ function Privacy() {
           </Reveal>
           <Reveal delay={300}>
             <p className="text-loop-green/60 leading-relaxed">
-              Verified Inners get an exclusive <strong className="text-loop-purple">"Inner Loop"</strong> — a private layer where they can securely DM each other, share event space, or swap resources, completely hidden from the public feed.
+              Verified Inners get an exclusive <strong className="text-loop-purple">"Inner Loop"</strong> &middot; a private layer where they can securely DM each other, share event space, or swap resources, completely hidden from the public feed.
             </p>
           </Reveal>
         </div>
@@ -471,9 +475,9 @@ function Privacy() {
 /* ────────────────────── FAQ ──────────────────────────────────────── */
 function FAQ() {
   const faqs = [
-    { q: 'Is InnerLoop only for Chicago?', a: "We're launching in Chicago first — neighborhood by neighborhood. Expansion plans depend on community growth." },
+    { q: 'Is InnerLoop only for Chicago?', a: "We're launching in Chicago first &middot; neighborhood by neighborhood. Expansion plans depend on community growth." },
     { q: 'How do I become a verified Inner?', a: 'Organizations apply through our signup flow. We verify legal status, location, and community presence before granting Inner status.' },
-    { q: 'What can I spend Loop Credits on?', a: 'Credits are redeemable at participating local businesses and partner orgs — think discounts, event tickets, and community perks.' },
+    { q: 'What can I spend Loop Credits on?', a: 'Credits are redeemable at participating local businesses and partner orgs &middot; think discounts, event tickets, and community perks.' },
     { q: 'How does the waitlist bonus work?', a: 'If a task is full and you join the waitlist, then complete the task after a spot opens, your verified hours and Loop Credits are doubled.' },
   ];
   const [openIndex, setOpenIndex] = useState(null);
@@ -519,7 +523,7 @@ function JoinCTA() {
         <Reveal><h2 className="font-display text-3xl md:text-5xl font-bold">Ready to join the Loop?</h2></Reveal>
         <Reveal delay={100}>
           <p className="text-white/65 max-w-lg mx-auto leading-relaxed">
-            Whether you're an everyday person looking to help, or an organization ready to mobilize your community — there's a place for you here.
+            Whether you're an everyday person looking to help, or an organization ready to mobilize your community &middot; there's a place for you here.
           </p>
         </Reveal>
         <Reveal delay={200}>
