@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  collection, query, where, orderBy, onSnapshot, doc, updateDoc, getDoc, increment,
+  collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -113,30 +113,38 @@ function TaskCard({ task, isInner, isExpanded, onToggle, onMarkComplete, onRevie
   async function handleAccept(applicant) {
     try {
       const ref = doc(db, 'posts', task.id);
-      const updatedApplicants = task.applicants.map(a =>
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const updatedApplicants = (data.applicants || []).map(a =>
         a.uid === applicant.uid ? { ...a, status: 'accepted' } : a
       );
+      const updatedJoined = [...(data.joinedUsers || [])];
+      if (!updatedJoined.includes(applicant.uid)) updatedJoined.push(applicant.uid);
       await updateDoc(ref, {
         applicants: updatedApplicants,
-        joinedUsers: [...(task.joinedUsers || []), applicant.uid],
-        taskFilled: increment(1),
+        joinedUsers: updatedJoined,
+        taskFilled: (data.taskFilled || 0) + 1,
       });
       toast.success(`Accepted ${applicant.name}!`);
     } catch (err) {
-      toast.error('Failed to accept applicant.');
+      toast.error('Failed to accept.');
     }
   }
 
   async function handleReject(applicant) {
     try {
       const ref = doc(db, 'posts', task.id);
-      const updatedApplicants = task.applicants.map(a =>
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const updatedApplicants = (data.applicants || []).map(a =>
         a.uid === applicant.uid ? { ...a, status: 'rejected' } : a
       );
       await updateDoc(ref, { applicants: updatedApplicants });
       toast.info(`Declined ${applicant.name}`);
     } catch (err) {
-      toast.error('Failed to update applicant.');
+      toast.error('Failed to update.');
     }
   }
 

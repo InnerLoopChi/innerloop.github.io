@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useToast } from '../contexts/ToastContext';
-import { doc, updateDoc, deleteDoc, arrayUnion, increment } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, getDoc, arrayUnion, increment } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import {
   Heart, Building2, Shield, Clock, Users, ArrowRight, Zap,
@@ -166,6 +166,18 @@ function ApplyModal({ post, currentUser, isFull, onClose }) {
     if (!currentUser?.id) return;
     setLoading(true);
     try {
+      const ref = doc(db, 'posts', post.id);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) { toast.error('Post not found.'); return; }
+      const data = snap.data();
+      
+      // Check if already applied
+      if (data.applicants?.some(a => a.uid === currentUser.id)) {
+        toast.error('You already applied.');
+        onClose();
+        return;
+      }
+
       const applicant = {
         uid: currentUser.id,
         name: currentUser.name || 'Anonymous',
@@ -178,9 +190,17 @@ function ApplyModal({ post, currentUser, isFull, onClose }) {
         starRating: currentUser.starRating || null,
         verifiedHours: currentUser.verifiedHours || 0,
       };
-      const updates = { applicants: arrayUnion(applicant) };
-      if (isFull) updates.waitlist = arrayUnion(currentUser.id);
-      await updateDoc(doc(db, 'posts', post.id), updates);
+
+      const updatedApplicants = [...(data.applicants || []), applicant];
+      const updates = { applicants: updatedApplicants };
+      
+      if (isFull) {
+        const updatedWaitlist = [...(data.waitlist || [])];
+        if (!updatedWaitlist.includes(currentUser.id)) updatedWaitlist.push(currentUser.id);
+        updates.waitlist = updatedWaitlist;
+      }
+      
+      await updateDoc(ref, updates);
       toast.success(isFull ? 'Waitlisted! 2× rewards if accepted.' : 'Applied! Organizer will review.');
       onClose();
     } catch (err) {
