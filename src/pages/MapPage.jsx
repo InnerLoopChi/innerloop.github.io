@@ -6,7 +6,7 @@ import {
   Map, MapPin, Users, Clock, Building2, Heart, Loader2, X, Search, Zap,
 } from 'lucide-react';
 
-const GOOGLE_MAPS_KEY = 'AIzaSyAgOQz8ny8qrSLs3lLbF3X7P0SzuxzYnAU';
+const GOOGLE_MAPS_KEY = 'AIzaSyCaYs2p0gKHawBPy38qDgJxzMco8VHTk6k';
 
 const NEIGHBORHOODS = [
   { name: 'Pilsen', lat: 41.8525, lng: -87.6614, color: '#8B6897' },
