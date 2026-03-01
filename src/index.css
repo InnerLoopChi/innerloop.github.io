@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-loop-gray text-loop-green;
+  }
+
+  ::selection {
+    background-color: #aFD2E9;
+    color: #0a3200;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-full
+           bg-loop-green text-white font-semibold text-sm
+           transition-all duration-200 hover:opacity-90 hover:scale-[1.02]
+           active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-full
+           border-2 border-loop-green text-loop-green font-semibold text-sm
+           transition-all duration-200 hover:bg-loop-green hover:text-white
+           active:scale-[0.98];
+  }
+
+  .section-padding {
+    @apply px-6 py-20 md:px-12 lg:px-24;
+  }
+}
