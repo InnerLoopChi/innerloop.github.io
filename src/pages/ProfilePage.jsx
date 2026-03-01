@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   collection,
-  query,
-  where,
-  orderBy,
   onSnapshot,
   doc,
   updateDoc,
@@ -47,14 +44,15 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user?.uid) return;
 
-    const q = query(
-      collection(db, 'reviews'),
-      where('reviewedID', '==', user.uid),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsub = onSnapshot(q, (snap) => {
-      setReviews(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    const unsub = onSnapshot(collection(db, 'reviews'), (snap) => {
+      const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const mine = all.filter(r => r.reviewedID === user.uid);
+      mine.sort((a, b) => {
+        const ta = a.createdAt?.toDate?.() || new Date();
+        const tb = b.createdAt?.toDate?.() || new Date();
+        return tb - ta;
+      });
+      setReviews(mine);
       setLoadingReviews(false);
     }, () => setLoadingReviews(false));
 
