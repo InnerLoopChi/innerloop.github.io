@@ -64,6 +64,13 @@ export default function MessagesPage() {
       });
       setConversations(mine);
       setLoading(false);
+
+      // Keep activeConvo in sync with Firestore (e.g. status changes)
+      setActiveConvo(prev => {
+        if (!prev) return prev;
+        const updated = mine.find(c => c.id === prev.id);
+        return updated || null; // null if deleted
+      });
     }, () => setLoading(false));
 
     return unsub;
@@ -168,7 +175,20 @@ export default function MessagesPage() {
       await updateDoc(doc(db, 'conversations', activeConvo.id), {
         status: 'accepted'
       });
-      setActiveConvo({ ...activeConvo, status: 'accepted' });
+      // Notify the sender that their request was accepted
+      const senderUid = activeConvo.senderId;
+      if (senderUid && senderUid !== user.uid) {
+        try {
+          await addDoc(collection(db, 'notifications'), {
+            recipientId: senderUid,
+            type: 'dm_accepted',
+            message: `${profile?.name || 'Someone'} accepted your DM request!`,
+            read: false,
+            createdAt: Timestamp.now(),
+            link: '/messages',
+          });
+        } catch (e) { }
+      }
     } catch (err) {
       console.error('Accept error:', err);
     }
@@ -242,6 +262,18 @@ export default function MessagesPage() {
       const docRef = await addDoc(collection(db, 'conversations'), convoData);
       setActiveConvo({ id: docRef.id, ...convoData });
       setShowNewConvo(false);
+
+      // Notify the recipient about the DM request
+      try {
+        await addDoc(collection(db, 'notifications'), {
+          recipientId: otherUser.id,
+          type: 'dm_request',
+          message: `${profile?.name || 'Someone'} sent you a message request`,
+          read: false,
+          createdAt: Timestamp.now(),
+          link: '/messages',
+        });
+      } catch (e) { }
     } catch (err) {
       console.error('Create convo error:', err);
     }
