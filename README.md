@@ -122,42 +122,50 @@ Vite provides instant hot module replacement. Just edit any file in `src/` and t
 
 ```
 InnerLoop/
-├── index.html                  # Root HTML (loads fonts, mounts React)
+├── index.html                  # Root HTML
 ├── package.json                # Dependencies & scripts
 ├── vite.config.js              # Vite configuration
 ├── tailwind.config.js          # Tailwind with InnerLoop color palette
 ├── postcss.config.js           # PostCSS for Tailwind
-├── firebase.json               # Firebase CLI config (hosting + Firestore)
+├── firebase.json               # Firebase CLI config
 ├── firestore.rules             # Firestore security rules
 ├── firestore.indexes.json      # Firestore compound query indexes
 ├── .env.example                # Template for Firebase env vars
+├── start-windows.bat           # One-click Windows CMD setup
+├── start-windows.ps1           # PowerShell setup
+├── start.sh                    # Bash setup (Mac/Linux/WSL)
 ├── ARCHITECTURE.md             # Firestore schema documentation
 ├── CHANGELOG.md                # Detailed change log by chunk
+├── SETUP.md                    # 5-min local dev guide
 │
 ├── src/
-│   ├── main.jsx                # React entry point
-│   ├── App.jsx                 # Router + AuthProvider + route definitions
+│   ├── main.jsx                # React entry + ErrorBoundary
+│   ├── App.jsx                 # Router + AuthProvider + ToastProvider + BottomNav
 │   ├── index.css               # Tailwind directives + custom animations
 │   │
 │   ├── lib/
 │   │   └── firebase.js         # Firebase init (Auth + Firestore)
 │   │
 │   ├── contexts/
-│   │   └── AuthContext.jsx     # Auth state, signup/login/logout, Firestore profile
+│   │   ├── AuthContext.jsx      # Auth state, signup/login/logout, Firestore profile
+│   │   └── ToastContext.jsx     # Global toast notifications
 │   │
 │   ├── pages/
-│   │   ├── LandingPage.jsx     # "Helping the Inner as a Looper" landing site
-│   │   ├── SignUpPage.jsx      # 2-step signup (role select → form)
-│   │   ├── LoginPage.jsx       # Email/password login
-│   │   ├── FeedPage.jsx        # Real-time local feed + Inner Loop toggle
-│   │   └── ProfilePage.jsx     # Loop Wallet + reviews + editable tags
+│   │   ├── LandingPage.jsx      # Marketing landing page
+│   │   ├── SignUpPage.jsx       # 2-step signup (role select → form)
+│   │   ├── LoginPage.jsx        # Email/password login
+│   │   ├── FeedPage.jsx         # Real-time local feed + Inner Loop toggle
+│   │   ├── MyTasksPage.jsx      # Task management for Inners + Loopers
+│   │   ├── MessagesPage.jsx     # Inner Loop DMs (verified Inners only)
+│   │   ├── ProfilePage.jsx      # Loop Wallet + reviews + tags
+│   │   └── SettingsPage.jsx     # Account settings + delete account
 │   │
 │   └── components/
-│       ├── PostCard.jsx        # Feed post card (task capacity, waitlist, join)
-│       ├── CreatePost.jsx      # New post modal (tags, task toggle, Inner-only)
-│       └── ReviewModal.jsx     # Leave review (star rating, hours, 2x multiplier)
-│
-└── demo.jsx                    # Self-contained demo artifact (all views)
+│       ├── BottomNav.jsx        # Mobile bottom tab bar
+│       ├── PostCard.jsx         # Feed post (tasks, waitlist, delete)
+│       ├── CreatePost.jsx       # New post modal
+│       ├── ReviewModal.jsx      # Star rating + 2x multiplier
+│       └── ErrorBoundary.jsx    # Global error catch
 ```
 
 ---

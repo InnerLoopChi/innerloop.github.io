@@ -1,5 +1,20 @@
 # InnerLoop — CHANGELOG
 
+## [0.9.0] — 2026-03-01 — Chunk 9: MVP Polish
+
+### Overview
+Final MVP polish — post deletion, global error boundary, all navigation links fixed to use React Router.
+
+### Files Created / Modified
+| File | Action | Purpose |
+|---|---|---|
+| `src/components/PostCard.jsx` | **Modified** | 3-dot author menu → delete post with toast notification |
+| `src/components/ErrorBoundary.jsx` | **Created** | Catches React render errors, shows friendly "Something went wrong" fallback with refresh button |
+| `src/main.jsx` | **Modified** | Wrapped App in ErrorBoundary |
+| `src/pages/LandingPage.jsx` | **Modified** | Fixed hero "Get Started" and mobile nav "Join the Loop" to use `<Link to="/signup">` |
+
+---
+
 ## [0.8.0] — 2026-03-01 — Chunk 8: Settings + Delete Account
 
 ### Files Created / Modified
