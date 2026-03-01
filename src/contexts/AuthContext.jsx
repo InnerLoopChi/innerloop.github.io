@@ -5,7 +5,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, Timestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
 const AuthContext = createContext(null);
@@ -21,23 +21,47 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);     // Firestore user doc
   const [loading, setLoading] = useState(true);
 
-  // Listen to Firebase auth state
+  // Listen to Firebase auth state + realtime profile
   useEffect(() => {
     if (!auth) {
       setLoading(false);
       return;
     }
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+
+    let profileUnsub = null;
+
+    const authUnsub = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
+
+      // Clean up previous profile listener
+      if (profileUnsub) {
+        profileUnsub();
+        profileUnsub = null;
+      }
+
       if (firebaseUser) {
-        const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
-        setProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null);
+        // Realtime listener for profile — keeps data in sync
+        profileUnsub = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
+          if (snap.exists()) {
+            setProfile({ id: snap.id, ...snap.data() });
+          } else {
+            setProfile(null);
+          }
+          setLoading(false);
+        }, () => {
+          setProfile(null);
+          setLoading(false);
+        });
       } else {
         setProfile(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
-    return unsub;
+
+    return () => {
+      authUnsub();
+      if (profileUnsub) profileUnsub();
+    };
   }, []);
 
   // Sign up — creates Auth user + Firestore user doc
@@ -52,29 +76,28 @@ export function AuthProvider({ children }) {
       location: null,
       ageVerification: false,
       starRating: null,
+      reviewCount: 0,
       verifiedHours: 0,
       loopCredits: 0,
       createdAt: Timestamp.now(),
     };
 
     await setDoc(doc(db, 'users', cred.user.uid), userData);
-    setProfile({ id: cred.user.uid, ...userData });
+    // Profile will be set automatically by the onSnapshot listener
     return cred.user;
   }
 
   // Login
   async function login({ email, password }) {
     const cred = await signInWithEmailAndPassword(auth, email, password);
-    const snap = await getDoc(doc(db, 'users', cred.user.uid));
-    setProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null);
+    // Profile will be set automatically by the onSnapshot listener
     return cred.user;
   }
 
   // Logout
   async function logout() {
     await signOut(auth);
-    setUser(null);
-    setProfile(null);
+    // user and profile will be cleared by the onAuthStateChanged listener
   }
 
   const value = { user, profile, loading, signup, login, logout };

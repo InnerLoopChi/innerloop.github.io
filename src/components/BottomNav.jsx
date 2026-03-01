@@ -16,6 +16,7 @@ export default function BottomNav() {
   const location = useLocation();
   const { profile, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const isVerifiedInner = profile?.role === 'Inner' && profile?.isVerified;
   const path = location.pathname;
@@ -30,6 +31,8 @@ export default function BottomNav() {
   ].filter(t => t.show);
 
   async function handleLogout() {
+    setLoggingOut(true);
+    setShowLogoutConfirm(false);
     await logout();
     navigate('/');
   }
@@ -92,6 +95,16 @@ export default function BottomNav() {
                 Sign Out
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logging out overlay */}
+      {loggingOut && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="text-center space-y-3">
+            <div className="w-8 h-8 mx-auto border-4 border-loop-purple/30 border-t-loop-purple rounded-full animate-spin" />
+            <p className="text-sm font-semibold text-loop-green/60">Signing out...</p>
           </div>
         </div>
       )}
