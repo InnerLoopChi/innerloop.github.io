@@ -122,7 +122,7 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/innerloop.github.io">
       <ToastProvider>
         <AuthProvider>
           <AppRoutes />

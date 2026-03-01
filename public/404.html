@@ -4,9 +4,8 @@
     <meta charset="utf-8" />
     <title>InnerLoop</title>
     <script>
-      // GitHub Pages SPA redirect
-      // Converts /feed, /login, etc. into /?/feed so index.html can handle routing
-      var pathSegmentsToKeep = 0;
+      // GitHub Pages SPA redirect for project pages
+      var pathSegmentsToKeep = 1; // keep /innerloop.github.io/
       var l = window.location;
       l.replace(
         l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
