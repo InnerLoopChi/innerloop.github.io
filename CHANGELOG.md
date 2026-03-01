@@ -1,5 +1,42 @@
 # InnerLoop — CHANGELOG
 
+## [0.3.0] — 2026-02-28 — Chunk 3: Local Feed + Posts + Real-time Firestore
+
+### Overview
+Built the full local feed experience: real-time scrolling posts from Firestore, create post modal with task capacity/waitlist support, post cards with join/waitlist actions, Inner Loop private feed filter, and tag search.
+
+### Files Created / Modified
+
+| File | Action | Purpose |
+|---|---|---|
+| `src/pages/FeedPage.jsx` | **Created** | Main feed page — real-time `onSnapshot` listener on `posts` collection, tag search, Inner Loop toggle for verified Inners, new post button, empty states |
+| `src/components/PostCard.jsx` | **Created** | Post card — author info, content, tag pills, task capacity progress bar, join task / join waitlist / leave waitlist actions, privacy enforcement (Loopers can't see other Loopers' task details), time-ago formatting |
+| `src/components/CreatePost.jsx` | **Created** | Create post modal — text content (1000 char), tag input with Enter/comma/backspace, task toggle (capacity + hours reward), Inner-only toggle for verified Inners, posts to Firestore with denormalized author info |
+| `src/App.jsx` | **Modified** | Replaced `FeedPlaceholder` with real `FeedPage`, added import |
+
+### Feed Features
+- **Real-time**: Posts update instantly via Firestore `onSnapshot`
+- **Public vs Inner Loop**: Two separate queries — `isInnerOnly: false` (public) vs `isInnerOnly: true` (Inner Loop). Toggle only visible to verified Inners
+- **Tag search**: Client-side filter by tag substring
+- **Task capacity**: Visual progress bar, spots remaining counter
+- **Waitlist**: When task is full, "Join Waitlist (2× rewards)" button appears. Waitlist count shown. Leave waitlist option
+- **Join task**: Direct join when spots available, updates `taskFilled` + `joinedUsers` atomically
+- **Privacy**: Loopers see aggregate capacity (e.g. "2 of 3 filled") but never see which other Loopers are assigned
+- **Hours reward**: Displayed on task posts
+
+### Firestore Post Document Structure
+```js
+{
+  authorID, authorName, authorRole, content, tags: [],
+  postTime: serverTimestamp(), isInnerOnly: boolean,
+  taskCapacity: number|null, taskFilled: number|null,
+  waitlist: [], joinedUsers: [], hoursReward: number|null,
+  location: null  // geolocation TBD
+}
+```
+
+---
+
 ## [0.2.0] — 2026-02-28 — Chunk 2: Auth System + Routing
 
 ### Overview
